@@ -1,12 +1,33 @@
-# React + Vite
+# Pet Adoption System
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A React-based web application that allows users to browse available pets for adoption, view detailed pet profiles, and add pet food to a shopping cart. It includes features such as filtering, searching, sorting, and cart management.
 
-Currently, two official plugins are available:
+## Features
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+- **Pet List**: View a list of pets available for adoption.
+- **Pet Details**: Click on a pet to view its detailed information, including age, breed, description, and more.
+- **Search and Filter**: Search for pets by name and filter them by breed, age, and type (e.g., Dog, Cat, Bird, Rabbit).
+- **Add to Cart**: Users can add pet food to their cart and view the total cost.
+- **Responsive Design**: Optimized for both desktop and mobile views.
 
-## Expanding the ESLint configuration
+## Technologies Used
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+- **React**: A JavaScript library for building user interfaces.
+- **React Router**: For managing routes and navigation within the app.
+- **CSS**: Custom styling to make the app visually appealing.
+- **LocalStorage**: For storing user data and cart information.
+
+## How to Run the Project Locally
+
+Follow the steps below to clone and run this project on your local machine:
+
+1. **Clone the repository**:
+   ```bash
+   git clone https://github.com/zunaidradin/pet-adoption-react.git
+2. Navigate to the project directory:
+cd pet-adoption-react
+3. Install the required dependencies:
+npm install
+4. Start the development server:
+npm run dev
+5. Open your browser and visit http://localhost:5173/ to see the application running.
