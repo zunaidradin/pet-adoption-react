@@ -1,0 +1,64 @@
+/* Form styling */
+.adopt-form {
+  max-width: 600px;
+  margin: 0 auto;
+  padding: 30px;
+  background-color: #fff;
+  border-radius: 12px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* Form label styling */
+.adopt-form label {
+  display: block;
+  font-size: 1.1rem;
+  color: #333;
+  margin-bottom: 8px;
+  font-weight: bold;
+}
+
+/* Form inputs and textarea */
+.adopt-form input,
+.adopt-form textarea {
+  width: 100%;
+  padding: 10px;
+  margin-bottom: 15px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  font-size: 1rem;
+  color: #333;
+}
+
+/* Submit button styling */
+.adopt-form button {
+  width: 100%;
+  padding: 12px;
+  background-color: #2b2d42;
+  color: #fff;
+  font-size: 1.1rem;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+/* Hover effect for the button */
+.adopt-form button:hover {
+  background-color: #1d1f29;
+}
+
+/* Responsive design for smaller screens */
+@media (max-width: 768px) {
+  .adopt-form {
+    padding: 20px;
+  }
+  
+  .adopt-form label {
+    font-size: 1rem;
+  }
+
+  .adopt-form input,
+  .adopt-form textarea {
+    font-size: 0.9rem;
+  }
+}

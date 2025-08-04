@@ -1,0 +1,44 @@
+/* Pet Detail Page */
+.pet-detail {
+  padding: 20px;
+  text-align: center;
+}
+
+.pet-detail-card {
+  background-color: #fff;
+  padding: 20px;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  width: 400px;
+  margin: 0 auto;
+}
+
+.pet-detail-image {
+  width: 100%;
+  height: 200px;
+  object-fit: cover;
+  border-radius: 8px;
+  margin-bottom: 20px;
+}
+
+.pet-info-table {
+  width: 100%;
+  margin-top: 20px;
+  border-collapse: collapse;
+  text-align: left;
+}
+
+.pet-info-table td {
+  padding: 10px;
+  border: 1px solid #ddd;
+}
+
+.back-btn {
+  padding: 10px 20px;
+  background-color: #2b2d42;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  margin-bottom: 20px;
+}

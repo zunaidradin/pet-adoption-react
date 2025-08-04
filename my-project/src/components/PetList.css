@@ -1,0 +1,217 @@
+/* Pet List - General Layout */
+.pet-list {
+  padding: 30px 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  max-width: 1200px;
+  margin: 0 auto;
+  background-color: #ffffff;
+  border-radius: 12px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+}
+
+/* Header */
+.pet-list .header {
+  display: flex;
+  justify-content: space-between;
+  width: 100%;
+  padding: 20px;
+  background-color: #2b2d42;
+  color: white;
+  border-radius: 10px;
+}
+
+.pet-list .user-name {
+  font-size: 1.5rem;
+  font-weight: bold;
+}
+
+/* Add New Pet Button */
+.add-pet-btn-container {
+  width: 100%;
+  text-align: right;
+  margin-bottom: 20px;
+}
+
+.add-pet-btn {
+  padding: 12px 24px;
+  background-color: #2b2d42;
+  color: white;
+  font-size: 1.2rem;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+/* Filter Section */
+.filters {
+  display: flex;
+  justify-content: center;
+  gap: 20px;
+  margin-bottom: 20px;
+}
+
+.filters select, .filters input {
+  padding: 10px;
+  font-size: 1rem;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+  outline: none;
+  cursor: pointer;
+}
+
+.filters input {
+  width: 200px;
+}
+
+/* Pet Food Section */
+.pet-food-container {
+  display: flex;
+  justify-content: center;
+  gap: 20px;
+  margin-top: 30px; /* Added gap between pet list and food section */
+}
+
+.pet-food-item {
+  background-color: #fff;
+  border-radius: 12px;
+  width: 200px;
+  padding: 20px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  text-align: center;
+  transition: transform 0.3s ease;
+}
+
+.pet-food-item:hover {
+  transform: translateY(-10px);
+}
+
+.food-image {
+  width: 100%;
+  height: 180px; /* Match the height of the pet card images */
+  object-fit: cover;
+  border-radius: 8px;
+  margin-bottom: 10px;
+}
+
+.add-to-cart-btn {
+  padding: 10px;
+  background-color: #2b2d42;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 1rem;
+}
+
+.add-to-cart-btn:hover {
+  background-color: #1d1f29;
+}
+
+/* Cart Section */
+.cart-container {
+  margin-top: 40px;
+  padding: 20px;
+  background-color: #f7f9fc;
+  width: 100%;
+  max-width: 400px;
+  text-align: center;
+  border-radius: 10px;
+}
+
+.cart-container ul {
+  list-style: none;
+  padding: 0;
+}
+
+.cart-container li {
+  padding: 8px;
+  border-bottom: 1px solid #ddd;
+}
+
+/* Pet Cards */
+.pet-cards-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 30px;
+  margin-bottom: 40px; /* Added gap between pet list and pet food section */
+}
+
+.pet-card {
+  background-color: #fff;
+  border-radius: 12px;
+  width: 250px;
+  padding: 20px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  text-align: center;
+  cursor: pointer;
+  transition: transform 0.3s ease;
+}
+
+.pet-card:hover {
+  transform: translateY(-10px);
+}
+
+.pet-card img {
+  width: 100%;
+  height: 180px; /* Match the height of the food images */
+  object-fit: cover;
+  border-radius: 8px;
+  margin-bottom: 10px;
+}
+
+.pet-card h2 {
+  font-size: 1.3rem;
+  margin: 10px 0;
+}
+
+.pet-card p {
+  color: #555;
+  font-size: 1rem;
+}
+
+/* Pet Detail Page */
+.pet-detail {
+  padding: 20px;
+  text-align: center;
+}
+
+.pet-detail-card {
+  background-color: #fff;
+  padding: 20px;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  width: 400px;
+  margin: 0 auto;
+}
+
+.pet-detail-image {
+  width: 100%;
+  height: 200px;
+  object-fit: cover;
+  border-radius: 8px;
+  margin-bottom: 20px;
+}
+
+.pet-info-table {
+  width: 100%;
+  margin-top: 20px;
+  border-collapse: collapse;
+  text-align: left;
+}
+
+.pet-info-table td {
+  padding: 10px;
+  border: 1px solid #ddd;
+}
+
+.back-btn {
+  padding: 10px 20px;
+  background-color: #2b2d42;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  margin-bottom: 20px;
+}
