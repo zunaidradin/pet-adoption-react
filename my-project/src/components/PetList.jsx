@@ -14,12 +14,7 @@ const PetList = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [sortBy, setSortBy] = useState('name');
 
-  const [foodItems, setFoodItems] = useState([
-    { id: 1, name: 'Dog Food', price: 20, image: '/images/dog-food.jpg' }, // Dog Food Image
-    { id: 2, name: 'Cat Food', price: 15, image: '/images/cat-food.jpg' }, // Cat Food Image
-    { id: 3, name: 'Bird Food', price: 10, image: '/images/bird-food.jpg' }, // Bird Food Image
-    { id: 4, name: 'Rabbit Food', price: 12, image: '/images/rabbit-food.jpg' }, // Rabbit Food Image
-  ]);
+  const [foodItems, setFoodItems] = useState([]);
 
   const [cart, setCart] = useState([]);
 
@@ -29,55 +24,37 @@ const PetList = () => {
 
   useEffect(() => {
     if (!isLoggedIn) {
-      navigate('/login'); // Redirect to login if not logged in
+      navigate('/login');
+      return;
     }
 
-    // Add pets with details (mock data)
-    const mockPets = [
-      { 
-        id: 1, 
-        name: 'Bella', 
-        age: '3 years', 
-        breed: 'Golden Retriever', 
-        type: 'Dog', 
-        status: 'Available', 
-        image: '/images/dog-image.jpg', 
-        description: 'A friendly and loyal dog who loves to play fetch and enjoy the outdoors.' 
-      },
-      { 
-        id: 2, 
-        name: 'Mittens', 
-        age: '2 years', 
-        breed: 'Tabby', 
-        type: 'Cat', 
-        status: 'Adopted', 
-        image: '/images/cat-image.jpg', 
-        description: 'A playful and curious cat who loves to nap in sunny spots and chase toys.' 
-      },
-      { 
-        id: 3, 
-        name: 'Tweety', 
-        age: '1 year', 
-        breed: 'Canary', 
-        type: 'Bird', 
-        status: 'Available', 
-        image: '/images/bird-image.jpg', 
-        description: 'A cheerful and energetic bird with a beautiful yellow color and melodic songs.' 
-      },
-      { 
-        id: 4, 
-        name: 'Bunny', 
-        age: '2 years', 
-        breed: 'Angora', 
-        type: 'Rabbit', 
-        status: 'Available', 
-        image: '/images/rabbit-image.jpg', 
-        description: 'A soft and fluffy rabbit who enjoys nibbling on fresh veggies and hopping around the garden.' 
-      },
-    ];
-
-    setPets(mockPets);
+    // Fetch pets from backend
+    fetch('http://localhost:5000/api/pets')
+      .then(res => res.json())
+      .then(data => {
+        console.log('Fetched pets:', data); // Debug log
+        setPets(data);
+      })
+      .catch(err => console.error('Error fetching pets:', err));
   }, [isLoggedIn, navigate]);
+
+  useEffect(() => {
+    // Fetch pet food from backend
+    fetch('http://localhost:5000/api/pet_food')
+      .then(res => res.json())
+      .then(data => {
+        console.log('Fetched pet food:', data); // Debug log
+        setFoodItems(data);
+      })
+      .catch(err => console.error('Error fetching pet food:', err));
+  }, []);
+
+  // Fetch cart items when component mounts
+  useEffect(() => {
+    if (isLoggedIn) {
+      fetchCartItems();
+    }
+  }, [isLoggedIn]);
 
   useEffect(() => {
     // Filter and search pets
@@ -119,13 +96,61 @@ const PetList = () => {
   };
 
   // Handle adding food to cart
-  const handleAddToCart = (foodItem) => {
-    setCart((prevCart) => [...prevCart, foodItem]);
+  const handleAddToCart = async (foodItem) => {
+    try {
+      const userId = JSON.parse(localStorage.getItem('user'))?.id || 'guest';
+      const response = await fetch('http://localhost:5000/api/cart', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          userId,
+          productId: foodItem.id,
+          productType: 'pet_food',
+          price: foodItem.price
+        }),
+      });
+
+      if (response.ok) {
+        // Fetch updated cart after adding item
+        fetchCartItems();
+        alert('Item added to cart!');
+      } else {
+        console.error('Failed to add to cart');
+      }
+    } catch (error) {
+      console.error('Error adding to cart:', error);
+    }
   };
 
-  // Calculate total cart value
-  const calculateTotal = () => {
-    return cart.reduce((total, food) => total + food.price, 0).toFixed(2);
+  // Fetch cart items
+  const fetchCartItems = async () => {
+    try {
+      const userId = JSON.parse(localStorage.getItem('user'))?.id || 'guest';
+      const response = await fetch(`http://localhost:5000/api/cart?userId=${userId}`);
+      const data = await response.json();
+      setCart(data);
+    } catch (error) {
+      console.error('Error fetching cart:', error);
+    }
+  };
+
+  // Handle removing item from cart
+  const handleRemoveFromCart = async (itemId) => {
+    try {
+      const response = await fetch(`http://localhost:5000/api/cart/${itemId}`, {
+        method: 'DELETE',
+      });
+
+      if (response.ok) {
+        fetchCartItems(); // Refresh cart after removal
+      } else {
+        console.error('Failed to remove from cart');
+      }
+    } catch (error) {
+      console.error('Error removing from cart:', error);
+    }
   };
 
   return (
@@ -222,14 +247,21 @@ const PetList = () => {
         {cart.length > 0 ? (
           <>
             <ul>
-              {cart.map((food, index) => (
-                <li key={index}>
-                  {food.name} - ${food.price}
+              {cart.map((item) => (
+                <li key={item.id}>
+                  {item.product_type === 'pet_food' && foodItems.find(f => f.id === item.product_id)?.name} 
+                  - ${item.price}
+                  <button 
+                    onClick={() => handleRemoveFromCart(item.id)}
+                    className="remove-from-cart"
+                  >
+                    Remove
+                  </button>
                 </li>
               ))}
             </ul>
             <div className="cart-total">
-              <p><strong>Total: </strong>${calculateTotal()}</p>
+              <p><strong>Total: </strong>${cart.reduce((sum, item) => sum + Number(item.price), 0).toFixed(2)}</p>
             </div>
           </>
         ) : (
