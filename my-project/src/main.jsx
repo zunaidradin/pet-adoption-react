@@ -1,36 +1,62 @@
-import React from 'react';
+import React, { useMemo, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import './index.css'; // Import global CSS
+import './index.css';
 
-// Import components for different views
 import PetList from './components/PetList';
 import PetDetail from './components/PetDetail';
 import AdoptPet from './components/AdoptPet';
 import AddPetForm from './components/AddPetForm';
-import Login from './components/Login'; // Login page component
-import Registration from './components/Registration'; // Registration page component
+import Login from './components/Login';
+import Registration from './components/Registration';
+
+// OPTIONAL: If you have a CartPanel component, import it and render it in a layout.
+// import CartPanel from './components/CartPanel';
 
 const App = () => {
-  const isLoggedIn = localStorage.getItem('isLoggedIn') === 'true'; // Check if the user is logged in
+  const isLoggedIn = localStorage.getItem('isLoggedIn') === 'true';
+
+  // ---- LIFTED CART STATE (single source of truth) ----
+  const [cart, setCart] = useState([]); // [{id, name, price, qty}]
+
+  const addToCart = (item) => {
+    setCart(prev => {
+      const i = prev.findIndex(p => p.id === item.id);
+      if (i > -1) {
+        const next = [...prev];
+        next[i] = { ...next[i], qty: next[i].qty + 1 };
+        return next;
+      }
+      return [...prev, { ...item, qty: 1 }];
+    });
+  };
+
+  const removeFromCart = (id) => setCart(prev => prev.filter(p => p.id !== id));
+  const clearCart = () => setCart([]);
+  const total = useMemo(() => cart.reduce((s, i) => s + i.price * i.qty, 0), [cart]);
 
   return (
     <Router>
       <Routes>
-        {/* Redirect to login page if not logged in */}
-        <Route path="/" element={isLoggedIn ? <PetList /> : <Navigate to="/login" />} />
+        <Route
+          path="/"
+          element={
+            isLoggedIn
+              ? (
+                // If you have a layout with a right-side cart, render it here and pass props down.
+                // <Layout right={<CartPanel cart={cart} total={total} onRemove={removeFromCart} onClear={clearCart}/>}>
+                //   <PetList onAddToCart={addToCart} cart={cart} />
+                // </Layout>
+                <PetList onAddToCart={addToCart} cart={cart} total={total} />
+              )
+              : <Navigate to="/login" />
+          }
+        />
 
-        {/* Login and Registration Routes */}
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Registration />} />
-
-        {/* Route for displaying details of a specific pet */}
-        <Route path="/pet/:id" element={<PetDetail />} />
-
-        {/* Route for the adoption application form */}
+        <Route path="/pet/:id" element={<PetDetail onAddToCart={addToCart} cart={cart} />} />
         <Route path="/adopt/:id" element={<AdoptPet />} />
-
-        {/* Admin Route for adding new pets (only if logged in as admin) */}
         {isLoggedIn && <Route path="/admin/add-pet" element={<AddPetForm />} />}
       </Routes>
     </Router>
