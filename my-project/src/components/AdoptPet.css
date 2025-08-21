@@ -62,3 +62,25 @@
     font-size: 0.9rem;
   }
 }
+/* src/components/AddPetForm.css */
+.muted { color: #666; }
+
+.file-input {
+  background: #fafafa;
+}
+
+.preview-wrap {
+  margin-top: 8px;
+}
+
+.preview-image {
+  width: 100%;
+  max-height: 240px;
+  object-fit: cover;
+  border-radius: 8px;
+}
+
+.form-msg {
+  margin-top: 10px;
+  text-align: center;
+}
