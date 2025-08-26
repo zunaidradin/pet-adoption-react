@@ -15,18 +15,23 @@ const PetList = () => {
   // Food + cart
   const [foodItems, setFoodItems] = useState([]);
   const [cart, setCart] = useState([]);
+  const cartTotal = cart.reduce((sum, i) => sum + Number(i.price || 0), 0);
+  const cartCount = cart.length;
 
   const navigate = useNavigate();
-  const isLoggedIn = localStorage.getItem('isLoggedIn') === 'true';
-  const storedUser = (() => { try { return JSON.parse(localStorage.getItem('user')); } catch { return null; } })();
-  const userId = storedUser?.id ?? storedUser?._id ?? 'guest';
-  const username = storedUser?.username ?? 'User';
+  // Prefer new auth_user (API-based) fallback to legacy 'user'
+  const authUser = (() => { try { return JSON.parse(localStorage.getItem('auth_user')); } catch { return null; } })();
+  const legacyUser = (() => { try { return JSON.parse(localStorage.getItem('user')); } catch { return null; } })();
+  const effectiveUser = authUser || legacyUser;
+  const isLoggedIn = !!effectiveUser;
+  const userId = effectiveUser?.id; // must be numeric for cart endpoints
+  const username = effectiveUser?.username || effectiveUser?.email || 'User';
 
   // ---------- Fetch Pets ----------
   useEffect(() => {
     if (!isLoggedIn) { navigate('/login'); return; }
 
-    fetch('http://localhost:5000/api/pets')
+  fetch('http://localhost:5000/api/pets')
       .then(res => res.json())
       .then(data => setPets(Array.isArray(data) ? data : []))
       .catch(err => console.error('Error fetching pets:', err));
@@ -44,7 +49,7 @@ const PetList = () => {
   const fetchCartItems = async () => {
     try {
       // server expects user_id (snake_case) to match your DB columns
-      const res = await fetch(`http://localhost:5000/api/cart?user_id=${encodeURIComponent(userId)}`);
+  const res = await fetch(`http://localhost:5000/api/cart?userId=${encodeURIComponent(userId)}`);
       if (!res.ok) throw new Error(`GET /api/cart failed (${res.status})`);
 
       const raw = await res.json();
@@ -58,11 +63,11 @@ const PetList = () => {
       // Normalize
       const normalized = items.map(it => ({
         id: it.id,
-        user_id: it.user_id ?? it.userId,
-        product_id: it.product_id ?? it.productId,
-        product_type: it.product_type ?? it.productType,
-        quantity: Number(it.quantity ?? 1),
-        price: Number(it.price ?? 0),
+  user_id: it.user_id ?? it.userId,
+  product_id: it.product_id ?? it.productId,
+  product_type: it.product_type ?? it.productType,
+  quantity: Number(it.quantity ?? 1),
+  price: Number(it.price ?? 0), // unit price
       }));
 
       setCart(normalized);
@@ -95,22 +100,26 @@ const PetList = () => {
   const handleSortChange = (e) => setSortBy(e.target.value);
 
   // ---------- Add to Cart ----------
-  const handleAddToCart = async (foodItem) => {
+  const handleAddToCart = async (foodItem, { scrollToCart = true } = {}) => {
+    if (!userId) { navigate('/login'); return; }
     try {
       const response = await fetch('http://localhost:5000/api/cart', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        // Server expects camelCase keys & derives price / increments quantity
         body: JSON.stringify({
-          user_id: userId,
-          product_id: foodItem.id,
-          product_type: 'pet_food',
-          quantity: 1,
-          price: Number(foodItem.price),
-        }),
+          userId: userId,
+          productId: foodItem.id,
+          productType: 'pet_food'
+        })
       });
 
       if (!response.ok) throw new Error('POST /api/cart failed');
       await fetchCartItems(); // refresh with DB values
+       if (scrollToCart) {
+         const el = document.getElementById('cart-section');
+         if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+       }
     } catch (error) {
       console.error('Error adding to cart:', error);
     }
@@ -119,7 +128,8 @@ const PetList = () => {
   // ---------- Remove from Cart ----------
   const handleRemoveFromCart = async (itemId) => {
     try {
-      const res = await fetch(`http://localhost:5000/api/cart/${itemId}`, { method: 'DELETE' });
+      if (!userId) return;
+      const res = await fetch(`http://localhost:5000/api/cart/${itemId}?userId=${encodeURIComponent(userId)}`, { method: 'DELETE' });
       if (!res.ok) throw new Error('DELETE /api/cart failed');
       await fetchCartItems();
     } catch (error) {
@@ -132,7 +142,23 @@ const PetList = () => {
       {/* Header */}
       <div className="header">
         <span className="user-name">Welcome, {username}</span>
-        <Logout />
+        <div className="header-actions">
+          <button
+            type="button"
+            className="cart-btn"
+            onClick={() => {
+              const el = document.getElementById('cart-section');
+              if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }}
+          >
+            {(() => {
+              const totalQty = cart.reduce((s,i)=>s + (i.quantity||1),0);
+              const totalVal = cart.reduce((s,i)=>s + (i.price * (i.quantity||1)),0);
+              return `Your Cart${totalQty ? ` (${totalQty} • $${totalVal.toFixed(2)})` : ''}`;
+            })()}
+          </button>
+          <Logout />
+        </div>
       </div>
 
       {/* Add New Pet */}
@@ -145,8 +171,7 @@ const PetList = () => {
       )}
 
       {/* Filters */}
-      <div className="filters">
-        <input type="text" placeholder="Search by name" value={searchQuery} onChange={handleSearchChange} />
+  <div className="filters">
         <select name="type" onChange={handleFilterChange} value={filter.type}>
           <option value="">Select Animal Type</option>
           <option value="Dog">Dog</option>
@@ -191,57 +216,85 @@ const PetList = () => {
       <h2>Pet Food</h2>
       <div className="pet-food-container">
         {foodItems.map((food) => (
-          <div key={food.id} className="pet-food-item">
+          <div
+            key={food.id}
+            className="pet-food-item clickable-food"
+            role="button"
+            tabIndex={0}
+            onClick={() => handleAddToCart(food)}
+            onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handleAddToCart(food); } }}
+          >
             <img src={food.image} alt={food.name} className="food-image" />
             <h3>{food.name}</h3>
             <p>${Number(food.price).toFixed(2)}</p>
-            <button
-              className="add-to-cart-btn"
-              type="button"
-              onClick={() => handleAddToCart(food)}
-            >
-              Add to Cart
-            </button>
+            <small style={{ color: '#666' }}>Click to add</small>
           </div>
         ))}
       </div>
 
       {/* Cart */}
-      <h2>Your Cart</h2>
-      <div className="cart-container">
-        {cart.length > 0 ? (
-          <>
-            <ul>
-              {cart.map((item) => {
-                const food = item.product_type === 'pet_food'
-                  ? foodItems.find(f => String(f.id) === String(item.product_id))
-                  : null;
-
-                return (
-                  <li key={item.id}>
-                    {food ? food.name : 'Item'} - ${Number(item.price).toFixed(2)}
-                    <button
-                      type="button"
-                      onClick={() => handleRemoveFromCart(item.id)}
-                      className="remove-from-cart"
-                    >
-                      Remove
-                    </button>
-                  </li>
-                );
-              })}
-            </ul>
-            <div className="cart-total">
-              <p>
-                <strong>Total: </strong>
-                ${cart.reduce((sum, i) => sum + Number(i.price || 0), 0).toFixed(2)}
-              </p>
-            </div>
-          </>
+      <section className="cart-section" id="cart-section">
+        <h2>Your Cart</h2>
+        {cart.length === 0 ? (
+          <div className="cart-empty">Your cart is empty!</div>
         ) : (
-          <p>Your cart is empty!</p>
+          <div className="cart-table-wrapper">
+            <table className="cart-table" aria-label="Shopping cart">
+              <thead>
+                <tr>
+                  <th>Item</th>
+                  <th className="qty-col">Qty</th>
+                  <th>Unit Price</th>
+                  <th>Subtotal</th>
+                  <th className="action-col">Action</th>
+                </tr>
+              </thead>
+              <tbody>
+                {cart.map(item => {
+                  const product = item.product_type === 'pet_food'
+                    ? foodItems.find(f => String(f.id) === String(item.product_id))
+                    : null;
+                  const name = product ? product.name : 'Item';
+                  const unit = Number(item.price) || 0;
+                  const qty = item.quantity || 1;
+                  const subtotal = unit * qty;
+                  return (
+                    <tr key={item.id}>
+                      <td data-label="Item">{name}</td>
+                      <td data-label="Qty" className="qty-col">{qty}</td>
+                      <td data-label="Unit Price">${unit.toFixed(2)}</td>
+                      <td data-label="Subtotal">${subtotal.toFixed(2)}</td>
+                      <td className="action-col">
+                        <button
+                          type="button"
+                          className="remove-btn"
+                          onClick={() => handleRemoveFromCart(item.id)}
+                        >Remove</button>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+              <tfoot>
+                <tr>
+                  <td colSpan="3" className="total-label">Total</td>
+                  <td colSpan="2" className="total-value">${cart.reduce((s,i)=> s + (i.price * (i.quantity||1)),0).toFixed(2)}</td>
+                </tr>
+              </tfoot>
+            </table>
+          </div>
         )}
-      </div>
+      </section>
+        <div className="checkout-actions">
+          <button
+            type="button"
+            className="checkout-btn"
+            onClick={() => navigate('/payment')}
+            disabled={cart.length === 0}
+          >
+            Proceed to Checkout
+          </button>
+        </div>
     </div>
   );
 };

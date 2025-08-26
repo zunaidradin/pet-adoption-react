@@ -9,6 +9,7 @@ import AdoptPet from './components/AdoptPet';
 import AddPetForm from './components/AddPetForm';
 import Login from './components/Login';
 import Registration from './components/Registration';
+import Payment from './components/Payment';
 
 // OPTIONAL: If you have a CartPanel component, import it and render it in a layout.
 // import CartPanel from './components/CartPanel';
@@ -57,7 +58,8 @@ const App = () => {
         <Route path="/register" element={<Registration />} />
         <Route path="/pet/:id" element={<PetDetail onAddToCart={addToCart} cart={cart} />} />
         <Route path="/adopt/:id" element={<AdoptPet />} />
-        {isLoggedIn && <Route path="/admin/add-pet" element={<AddPetForm />} />}
+  {isLoggedIn && <Route path="/admin/add-pet" element={<AddPetForm />} />}
+  <Route path="/payment" element={<Payment />} />
       </Routes>
     </Router>
   );

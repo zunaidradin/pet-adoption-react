@@ -64,7 +64,8 @@ const AddPetForm = () => {
       fd.append('description', description.trim());
       fd.append('image', imageFile); // field name must be "image"
 
-      const res = await fetch('/api/pets', { method: 'POST', body: fd });
+  // Use explicit backend origin (dev) to avoid issues if proxy missing
+  const res = await fetch('http://localhost:5000/api/pets', { method: 'POST', body: fd });
 
       // Try to read JSON, but don't explode if server returns empty body
       const data = await res.json().catch(() => ({}));

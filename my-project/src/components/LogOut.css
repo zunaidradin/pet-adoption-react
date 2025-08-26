@@ -8,7 +8,12 @@
   border-radius: 8px;
   cursor: pointer;
   transition: background-color 0.3s ease;
-  margin-top: 10px;
+  line-height: 1; /* tighten */
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 42px; /* match cart button approx */
+  margin: 0; /* remove vertical offset */
 }
 
 .logout-btn:hover {

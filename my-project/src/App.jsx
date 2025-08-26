@@ -1,9 +1,11 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import PetList from './PetList'; // Pet List page
-import PetDetail from './PetDetail'; // Pet Detail page
-import Login from './Login'; // Login page
-import Registration from './Registration'; // Registration page
+// Corrected import paths to point to components folder
+import PetList from './components/PetList.jsx';
+import PetDetail from './components/PetDetail.jsx';
+import Login from './components/Login.jsx';
+import Registration from './components/Registration.jsx';
+import Payment from './components/Payment.jsx';
 
 const App = () => {
   return (
@@ -12,7 +14,8 @@ const App = () => {
         <Route path="/login" element={<Login />} /> {/* Login Page */}
         <Route path="/register" element={<Registration />} /> {/* Registration Page */}
         <Route path="/" element={<PetList />} /> {/* Pet List Page */}
-        <Route path="/pet/:id" element={<PetDetail />} /> {/* Pet Detail Page */}
+  <Route path="/pet/:id" element={<PetDetail />} />
+  <Route path="/payment" element={<Payment />} />
       </Routes>
     </Router>
   );
