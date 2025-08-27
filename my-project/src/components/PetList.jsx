@@ -251,23 +251,28 @@ const PetList = () => {
           {menuOpen && (
             <div ref={menuRef} className="nav-menu-panel" id="primary-menu" role="menu">
               <ul className="nav-menu-list">
-                <li><button type="button" role="menuitem" onClick={()=>gotoAndClose('/vet')} className="menu-link">Vet Directory</button></li>
+                {/* 1. Cart */}
+                <li><button type="button" role="menuitem" onClick={()=>gotoAndClose('/cart')} className="menu-link">Cart {totalQty ? <span className="inline-badge">{totalQty} • ${totalVal.toFixed(2)}</span> : '(empty)'}</button></li>
+                {/* 2. Add New Pet (only when logged in) */}
+                {isLoggedIn && (
+                  <li><button type="button" role="menuitem" onClick={()=>gotoAndClose('/admin/add-pet')} className="menu-link">Add New Pet</button></li>
+                )}
+                {/* 3. Donate */}
                 <li><button type="button" role="menuitem" onClick={()=>gotoAndClose('/donation')} className="menu-link">Donate</button></li>
+                {/* 4. Vet Directory */}
+                <li><button type="button" role="menuitem" onClick={()=>gotoAndClose('/vet')} className="menu-link">Vet Directory</button></li>
+                {/* 5. Light/Dark Mode toggle as last in requested list */}
                 <li>
                   <button type="button" role="menuitem" className="menu-link toggle-theme-btn" onClick={()=> setDarkMode(m=>!m)}>
                     <span>{darkMode ? 'Light Mode' : 'Dark Mode'}</span>
                     <span className="inline-badge">{darkMode ? 'ON' : 'OFF'}</span>
                   </button>
                 </li>
-                <li><button type="button" role="menuitem" onClick={()=>gotoAndClose('/cart')} className="menu-link">Cart {totalQty ? <span className="inline-badge">{totalQty} • ${totalVal.toFixed(2)}</span> : '(empty)'}</button></li>
-                {isLoggedIn && (
-                  <>
-                    <li><button type="button" role="menuitem" onClick={()=>gotoAndClose('/admin/add-pet')} className="menu-link">Add New Pet</button></li>
-                    { (effectiveUser?.username?.toLowerCase?.() === 'admin') && (
-                      <li><button type="button" role="menuitem" onClick={()=>gotoAndClose('/admin')} className="menu-link">Admin Panel</button></li>
-                    )}
-                  </>
+                {/* Admin Panel (kept after core items if user is admin) */}
+                {isLoggedIn && (effectiveUser?.username?.toLowerCase?.() === 'admin') && (
+                  <li><button type="button" role="menuitem" onClick={()=>gotoAndClose('/admin')} className="menu-link">Admin Panel</button></li>
                 )}
+                {/* Logout */}
                 <li className="logout-wrapper" role="menuitem"><Logout /></li>
               </ul>
             </div>

@@ -13,19 +13,41 @@
 .header-actions { position:relative; display:flex; align-items:center; }
 
 /* Hamburger Button */
-.hamburger-btn { position:relative; width:48px; height:44px; background:var(--bg-surface-alt); border:1px solid var(--border-color); border-radius:12px; display:flex; flex-direction:column; justify-content:center; align-items:center; gap:5px; cursor:pointer; transition:background .3s, border-color .3s; box-shadow:0 4px 14px -4px rgba(0,0,0,0.35); }
+.hamburger-btn { position:relative; width:48px; height:44px; background:var(--bg-surface-alt); border:1px solid var(--border-color); border-radius:12px; display:flex; flex-direction:column; justify-content:center; align-items:center; gap:5px; cursor:pointer; transition:background .3s, border-color .3s, box-shadow .3s; box-shadow:0 4px 14px -4px rgba(0,0,0,0.35); }
 .hamburger-btn .bar { width:22px; height:3px; background:#fff; border-radius:2px; transition:transform .35s ease, opacity .25s; }
 .hamburger-btn.open { background:var(--accent); border-color:var(--accent); }
 .hamburger-btn.open .bar:nth-child(1){ transform:translateY(8px) rotate(45deg); }
 .hamburger-btn.open .bar:nth-child(2){ opacity:0; }
 .hamburger-btn.open .bar:nth-child(3){ transform:translateY(-8px) rotate(-45deg); }
-.hamburger-btn:hover { background:#2b2f44; }
+.hamburger-btn:hover { background:var(--bg-surface); border-color:var(--accent); box-shadow:0 6px 18px -6px rgba(0,0,0,0.45); }
 .hamburger-btn.open:hover { background:var(--accent-hover); }
 
 /* Notification button */
-.notif-btn { margin-left:10px; position:relative; width:48px; height:44px; background:var(--bg-surface-alt); border:1px solid var(--border-color); border-radius:12px; display:flex; align-items:center; justify-content:center; font-size:1.1rem; cursor:pointer; transition:background .3s,border-color .3s; box-shadow:0 4px 14px -4px rgba(0,0,0,0.35); }
-.notif-btn:hover { background:var(--bg-surface); border-color:var(--accent); }
-.notif-badge { position:absolute; top:4px; right:4px; background:#ef4444; color:#fff; font-size:0.55rem; padding:3px 6px; border-radius:30px; font-weight:700; letter-spacing:.4px; box-shadow:0 0 0 2px var(--bg-surface-alt); }
+.notif-btn { margin-left:10px; position:relative; width:48px; height:44px; background:var(--bg-surface-alt); border:1px solid var(--border-color); border-radius:12px; display:flex; align-items:center; justify-content:center; font-size:1.1rem; cursor:pointer; transition:background .25s,border-color .25s, box-shadow .25s; box-shadow:0 4px 14px -4px rgba(0,0,0,0.3); color:var(--text-primary); }
+.notif-btn:hover { background:var(--bg-surface); border-color:var(--accent); box-shadow:0 6px 18px -6px rgba(0,0,0,0.45); }
+.dark-theme .notif-btn { background:#2a3446; border-color:#2f4156; }
+.dark-theme .notif-btn:hover { background:#35465c; }
+.notif-badge { position:absolute; top:4px; right:4px; background:#ef4444; color:#fff; font-size:0.6rem; padding:4px 7px; border-radius:30px; font-weight:700; letter-spacing:.4px; box-shadow:0 0 0 2px var(--bg-surface-alt); }
+.dark-theme .notif-badge { box-shadow:0 0 0 2px #2a3446; }
+
+/* Light mode explicit outline/ring to improve contrast on dark gradient header */
+body:not(.dark-theme) .hamburger-btn,
+body:not(.dark-theme) .notif-btn { 
+  border:2px solid rgba(255,255,255,0.9); 
+  background:linear-gradient(145deg,#ffffff,#f1f5f9); 
+  box-shadow:0 0 0 3px rgba(0,0,0,0.25), 0 4px 14px -4px rgba(0,0,0,0.35);
+}
+body:not(.dark-theme) .hamburger-btn:hover,
+body:not(.dark-theme) .notif-btn:hover { 
+  border-color:var(--accent); 
+  box-shadow:0 0 0 3px rgba(59,130,246,0.45), 0 6px 18px -6px rgba(0,0,0,0.5); 
+  background:#ffffff; 
+}
+body:not(.dark-theme) .hamburger-btn:focus-visible,
+body:not(.dark-theme) .notif-btn:focus-visible { 
+  outline:none; 
+  box-shadow:0 0 0 3px rgba(59,130,246,0.6), 0 0 0 6px rgba(255,255,255,0.6); 
+}
 .notifications-panel { min-width:260px; }
 
 /* Cart badge on hamburger */
@@ -172,3 +194,43 @@
 .back-btn { padding:10px 20px; background:var(--accent); color:#fff; border:none; border-radius:8px; cursor:pointer; margin-bottom:20px; }
 
 /* (Inline cart styles removed; dedicated cart page now handles styling) */
+
+/* === Light Mode Visibility Enhancements (appended overrides) === */
+body:not(.dark-theme) .header-actions .hamburger-btn,
+body:not(.dark-theme) .header-actions .notif-btn {
+  border:2px solid #cbd5e1 !important;
+  background:linear-gradient(145deg,#ffffff,#eef3f8) !important;
+  box-shadow:0 2px 0 0 rgba(0,0,0,0.12), 0 6px 18px -6px rgba(0,0,0,0.4) !important;
+  color:#1f2937 !important;
+}
+body:not(.dark-theme) .header-actions .hamburger-btn .bar { background:#1f2937 !important; }
+body:not(.dark-theme) .header-actions .hamburger-btn:hover,
+body:not(.dark-theme) .header-actions .notif-btn:hover {
+  border-color:var(--accent) !important;
+  box-shadow:0 0 0 2px #fff, 0 0 0 5px rgba(59,130,246,0.35), 0 12px 28px -10px rgba(0,0,0,0.55) !important;
+  background:#ffffff !important;
+}
+body:not(.dark-theme) .header-actions .hamburger-btn:focus-visible,
+body:not(.dark-theme) .header-actions .notif-btn:focus-visible {
+  outline:none;
+  box-shadow:0 0 0 3px rgba(59,130,246,0.55), 0 0 0 6px rgba(255,255,255,0.75) !important;
+}
+body:not(.dark-theme) .header-actions .notifications-panel {
+  background:var(--bg-surface-alt) !important;
+  border:1px solid var(--border-color) !important;
+  border-radius:20px !important;
+  padding:18px 18px 14px !important;
+  box-shadow:0 30px 70px -24px rgba(0,0,0,0.6), 0 0 0 4px rgba(255,255,255,0.8) !important;
+}
+body:not(.dark-theme) .header-actions .notifications-panel h3 { color:var(--text-primary) !important; }
+/* === End Light Mode Visibility Enhancements === */
+
+/* Force black text in light mode for maximum contrast */
+body:not(.dark-theme) .header-actions .hamburger-btn,
+body:not(.dark-theme) .header-actions .notif-btn,
+body:not(.dark-theme) .header-actions .notifications-panel,
+body:not(.dark-theme) .header-actions .notifications-panel * {
+  color:#000 !important;
+  fill:#000 !important;
+}
+body:not(.dark-theme) .header-actions .hamburger-btn .bar { background:#000 !important; }
