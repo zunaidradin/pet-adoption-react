@@ -4,12 +4,16 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import './index.css';
 
 import PetList from './components/PetList';
+import AdminPanel from './components/AdminPanel';
 import PetDetail from './components/PetDetail';
 import AdoptPet from './components/AdoptPet';
 import AddPetForm from './components/AddPetForm';
 import Login from './components/Login';
 import Registration from './components/Registration';
 import Payment from './components/Payment';
+import Donation from './components/Donation';
+import VetList from './components/VetList';
+import CartPage from './components/CartPage';
 
 // OPTIONAL: If you have a CartPanel component, import it and render it in a layout.
 // import CartPanel from './components/CartPanel';
@@ -60,6 +64,10 @@ const App = () => {
         <Route path="/adopt/:id" element={<AdoptPet />} />
   {isLoggedIn && <Route path="/admin/add-pet" element={<AddPetForm />} />}
   <Route path="/payment" element={<Payment />} />
+  <Route path="/donation" element={<Donation />} />
+  <Route path="/admin" element={<AdminPanel />} />
+  <Route path="/cart" element={<CartPage />} />
+  <Route path="/vet" element={<VetList />} />
       </Routes>
     </Router>
   );

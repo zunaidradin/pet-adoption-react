@@ -1,0 +1,50 @@
+.vet-page { max-width:1100px; margin:40px auto; padding:32px 28px 42px; background:var(--bg-surface); color:var(--text-primary); border-radius:18px; box-shadow:0 8px 28px -6px rgba(0,0,0,0.12); position:relative; }
+.vet-header { text-align:center; margin-bottom:28px; }
+.vet-title { font-size:2.3rem; margin:0 0 8px; font-weight:800; background:linear-gradient(90deg,#2563eb,#9333ea); -webkit-background-clip:text; background-clip:text; color:transparent; letter-spacing:.5px; }
+.vet-subtitle { font-size:1.05rem; color:var(--text-secondary); max-width:720px; margin:0 auto; line-height:1.5; }
+.vet-actions { display:flex; justify-content:flex-start; margin-bottom:16px; }
+.vet-actions .back-btn { background:var(--accent); color:#fff; border:none; padding:10px 20px; border-radius:8px; cursor:pointer; font-weight:600; box-shadow:0 4px 14px -4px rgba(0,0,0,0.3); transition:background .25s; }
+.vet-actions .back-btn:hover { background:var(--accent-hover); }
+
+/* Table Styling */
+.vet-table-wrapper { width:100%; overflow-x:auto; border:1px solid var(--border-color); border-radius:14px; background:var(--bg-surface); box-shadow:0 4px 16px -2px rgba(0,0,0,0.08); }
+.vet-table { width:100%; border-collapse:collapse; font-size:0.95rem; }
+.vet-table thead { background:#2b2d42; color:#fff; }
+.vet-table th, .vet-table td { padding:14px 16px; text-align:left; }
+.vet-table tbody tr { border-top:1px solid var(--border-color); }
+.vet-table tbody tr:nth-child(even){ background:var(--bg-surface-alt); }
+.vet-table tbody tr:hover { background:var(--bg-surface-alt); }
+.vet-table a.phone-link { color:var(--accent); text-decoration:none; font-weight:600; }
+.vet-table a.phone-link:hover { text-decoration:underline; }
+
+/* Rating Stars */
+.rating { display:inline-flex; align-items:center; gap:4px; font-weight:600; }
+.rating .star { font-size:1rem; line-height:1; display:inline-block; }
+.rating .star.full { color:#fbbf24; }
+.rating .star.half { color:#fbbf24; position:relative; }
+.rating .star.half::after { content:'★'; position:absolute; left:0; top:0; width:50%; overflow:hidden; color:#d1d5db; }
+.rating .star.empty { color:#d1d5db; }
+.rating-value { font-size:0.8rem; color:var(--text-secondary); font-weight:700; }
+
+.vet-footer-note { margin-top:26px; font-size:0.75rem; color:var(--text-secondary); text-align:center; }
+
+/* Appointment Column */
+.appointment-btn { background:var(--accent); color:#fff; border:none; padding:8px 14px; border-radius:6px; font-size:0.78rem; font-weight:600; cursor:pointer; box-shadow:0 2px 6px rgba(0,0,0,0.15); transition:background .25s, transform .15s; letter-spacing:.3px; }
+.appointment-btn:hover { background:var(--accent-hover); }
+.appointment-btn:active { transform:translateY(1px); }
+
+.availability-badge { display:inline-block; padding:6px 10px; border-radius:20px; font-size:0.65rem; font-weight:600; letter-spacing:.5px; text-transform:uppercase; }
+.availability-badge.unavailable { background:var(--bg-surface-alt); color:var(--text-secondary); border:1px solid var(--border-color); }
+
+.appointment-success { display:flex; align-items:flex-start; gap:8px; background:#ecfdf5; border:1px solid #34d399; padding:8px 10px; border-radius:10px; font-size:0.7rem; line-height:1.2; box-shadow:0 2px 5px rgba(0,0,0,0.05); }
+.appointment-success .icon { background:#10b981; color:#fff; width:18px; height:18px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:0.7rem; font-weight:700; box-shadow:0 0 0 3px rgba(16,185,129,0.3); }
+.appointment-success .text { font-weight:600; color:#065f46; }
+
+@media (max-width: 720px) {
+  .vet-title { font-size:1.9rem; }
+  .vet-table thead { display:none; }
+  .vet-table, .vet-table tbody, .vet-table tr, .vet-table td { display:block; width:100%; }
+  .vet-table tr { margin-bottom:12px; border:1px solid var(--border-color); border-radius:12px; overflow:hidden; background:var(--bg-surface); }
+  .vet-table td { position:relative; padding-left:130px; }
+  .vet-table td::before { content:attr(data-label); position:absolute; left:12px; top:50%; transform:translateY(-50%); font-size:0.68rem; font-weight:600; text-transform:uppercase; letter-spacing:0.5px; color:#6b7280; }
+}

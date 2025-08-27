@@ -1,0 +1,15 @@
+.admin-panel { max-width:1100px; margin:40px auto; padding:34px 28px 60px; background:var(--bg-surface); border:1px solid var(--border-color); border-radius:20px; box-shadow:0 6px 28px -6px rgba(0,0,0,0.12); }
+.admin-title { margin:0 0 12px; font-size:2.2rem; font-weight:800; background:linear-gradient(90deg,#2563eb,#9333ea); -webkit-background-clip:text; background-clip:text; color:transparent; }
+.admin-intro { margin:0 0 30px; color:var(--text-secondary); line-height:1.5; }
+.admin-sections { display:grid; gap:24px; grid-template-columns:repeat(auto-fill,minmax(260px,1fr)); }
+.admin-card { background:var(--bg-surface-alt); border:1px solid var(--border-color); padding:20px 22px 24px; border-radius:16px; box-shadow:0 4px 16px -6px rgba(0,0,0,0.1); transition:background .3s,border-color .3s; }
+.admin-card h3 { margin:0 0 8px; font-size:1.15rem; }
+.admin-card p { margin:0; color:var(--text-secondary); font-size:0.9rem; }
+.admin-sections.single-col { grid-template-columns:1fr; }
+.pending-table { width:100%; border-collapse:collapse; margin-top:14px; font-size:0.85rem; }
+.pending-table th, .pending-table td { padding:10px 12px; border:1px solid var(--border-color); text-align:left; }
+.approve-btn, .reject-btn { padding:6px 10px; font-size:0.7rem; font-weight:600; border:none; border-radius:6px; cursor:pointer; letter-spacing:.5px; }
+.approve-btn { background:var(--accent); color:#fff; }
+.approve-btn:hover { background:var(--accent-hover); }
+.reject-btn { background:var(--danger); color:#fff; }
+.reject-btn:hover { filter:brightness(.9); }

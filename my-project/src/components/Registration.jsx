@@ -1,29 +1,40 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import './Registration.css'; // Import the custom CSS for the registration page
+import './Registration.css';
 
 const Registration = () => {
   const [username, setUsername] = useState('');
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const navigate = useNavigate(); // React Router hook for navigation
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-
-    // Ensure both username and password are entered
-    if (username && password) {
-      // Save the user data to localStorage (simulate registration)
-      localStorage.setItem('user', JSON.stringify({ username, password }));
-
-      setSuccess('User registered successfully!');
-      setError('');
-      
-      // Redirect back to login page after successful registration
-      setTimeout(() => navigate('/login'), 2000); // Redirect to login page after 2 seconds
-    } else {
-      setError('Please fill in both fields.');
+    setError('');
+    setSuccess('');
+    if (!username || !email || !password) {
+      setError('All fields required');
+      return;
+    }
+    try {
+      const res = await fetch('http://localhost:5000/api/auth/signup', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ username, email, password })
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setError(data.error || 'Signup failed');
+        return;
+      }
+      localStorage.setItem('auth_user', JSON.stringify({ id: data.id, username: data.username, displayName: data.username, email: data.email }));
+      setSuccess('User registered successfully! Redirecting...');
+      setTimeout(() => navigate('/'), 1200);
+    } catch (err) {
+      setError('Network error');
     }
   };
 
@@ -41,6 +52,16 @@ const Registration = () => {
               id="username"
               value={username}
               onChange={(e) => setUsername(e.target.value)}
+              required
+            />
+          </div>
+          <div className="input-group">
+            <label htmlFor="email">Email</label>
+            <input
+              type="email"
+              id="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
               required
             />
           </div>

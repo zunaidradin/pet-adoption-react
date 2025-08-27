@@ -1,5 +1,5 @@
 // src/components/PetList.jsx
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import './PetList.css';
 import Logout from './LogOut';
@@ -25,7 +25,7 @@ const PetList = () => {
   const effectiveUser = authUser || legacyUser;
   const isLoggedIn = !!effectiveUser;
   const userId = effectiveUser?.id; // must be numeric for cart endpoints
-  const username = effectiveUser?.username || effectiveUser?.email || 'User';
+  const username = effectiveUser?.displayName || effectiveUser?.username || effectiveUser?.email || 'User';
 
   // ---------- Fetch Pets ----------
   useEffect(() => {
@@ -82,9 +82,10 @@ const PetList = () => {
   // ---------- Filters / Sorting ----------
   useEffect(() => {
     let filtered = pets.filter((pet) => {
+      const animalType = pet.animalType || pet.type; // support DB field name
       const matchesBreed = filter.breed ? pet.breed === filter.breed : true;
       const matchesAge = filter.age ? pet.age === filter.age : true;
-      const matchesType = filter.type ? pet.type === filter.type : true;
+      const matchesType = filter.type ? animalType === filter.type : true;
       const matchesSearch = (pet.name || '').toLowerCase().includes(searchQuery.toLowerCase());
       return matchesBreed && matchesAge && matchesType && matchesSearch;
     });
@@ -137,70 +138,216 @@ const PetList = () => {
     }
   };
 
+  // --- Hamburger menu state ---
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [notifOpen, setNotifOpen] = useState(false);
+  const [notifications, setNotifications] = useState([]);
+  const [unreadCount, setUnreadCount] = useState(0);
+  const [darkMode, setDarkMode] = useState(()=> localStorage.getItem('theme') === 'dark');
+  const menuRef = useRef(null);
+  const toggleRef = useRef(null);
+  const [showFilters, setShowFilters] = useState(false);
+
+  const totalQty = cart.reduce((s,i)=>s + (i.quantity||1),0);
+  const totalVal = cart.reduce((s,i)=>s + (i.price * (i.quantity||1)),0);
+
+  const closeMenu = useCallback(() => setMenuOpen(false), []);
+  const closeNotif = useCallback(() => setNotifOpen(false), []);
+
+  // Close on outside click
+  useEffect(()=>{
+  if(!menuOpen) return; 
+    const handler = (e)=>{
+      if(!menuRef.current) return; 
+      if(menuRef.current.contains(e.target) || toggleRef.current?.contains(e.target)) return; 
+      closeMenu();
+    };
+    document.addEventListener('mousedown', handler);
+    document.addEventListener('touchstart', handler);
+    return ()=>{ document.removeEventListener('mousedown', handler); document.removeEventListener('touchstart', handler); };
+  },[menuOpen, closeMenu]);
+
+  // Close on ESC
+  useEffect(()=>{
+    if(!menuOpen && !notifOpen) return; 
+    const handler = (e)=>{ if(e.key==='Escape'){ closeMenu(); closeNotif(); } };
+    window.addEventListener('keydown', handler);
+    return ()=> window.removeEventListener('keydown', handler);
+  },[menuOpen, notifOpen, closeMenu, closeNotif]);
+
+  // Fetch notifications
+  const fetchNotifications = useCallback(async ()=>{
+    if(!isLoggedIn) return;
+    try {
+      const res = await fetch('http://localhost:5000/api/admin/me/notifications', { credentials:'include' });
+      const data = await res.json();
+      if(Array.isArray(data)) {
+        setNotifications(data);
+        setUnreadCount(data.filter(n=>!n.is_read).length);
+      }
+    } catch(e){ /* ignore */ }
+  },[isLoggedIn]);
+  useEffect(()=>{ fetchNotifications(); },[fetchNotifications]);
+
+  const markRead = async (id)=>{
+    try { await fetch(`http://localhost:5000/api/admin/me/notifications/${id}/read`, { method:'POST', credentials:'include' }); fetchNotifications(); } catch {}
+  };
+
+  const gotoAndClose = (path) => { navigate(path); closeMenu(); };
+  const scrollCartAndClose = () => { closeMenu(); const el = document.getElementById('cart-section'); if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' }); };
+
+  const resetFilters = () => {
+    setFilter({ breed: '', age: '', type: '' });
+    setSortBy('name');
+    setSearchQuery('');
+  };
+
+  // Apply body class for theme
+  useEffect(()=> {
+    if(darkMode){ document.body.classList.add('dark-theme'); localStorage.setItem('theme','dark'); }
+    else { document.body.classList.remove('dark-theme'); localStorage.setItem('theme','light'); }
+  }, [darkMode]);
+
   return (
-    <div className="pet-list">
+    <div className="pet-list themed-transition">
       {/* Header */}
       <div className="header">
         <span className="user-name">Welcome, {username}</span>
         <div className="header-actions">
           <button
+            ref={toggleRef}
             type="button"
-            className="cart-btn"
-            onClick={() => {
-              const el = document.getElementById('cart-section');
-              if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
-            }}
+            aria-haspopup="true"
+            aria-expanded={menuOpen}
+            aria-controls="primary-menu"
+            className={`hamburger-btn ${menuOpen ? 'open' : ''}`}
+            onClick={()=> setMenuOpen(o=>!o)}
           >
-            {(() => {
-              const totalQty = cart.reduce((s,i)=>s + (i.quantity||1),0);
-              const totalVal = cart.reduce((s,i)=>s + (i.price * (i.quantity||1)),0);
-              return `Your Cart${totalQty ? ` (${totalQty} • $${totalVal.toFixed(2)})` : ''}`;
-            })()}
+            <span className="bar" />
+            <span className="bar" />
+            <span className="bar" />
+            {totalQty > 0 && <span className="cart-badge" aria-label={`${totalQty} items in cart`}>{totalQty}</span>}
           </button>
-          <Logout />
+          <button type="button" className="notif-btn" aria-label="Notifications" onClick={()=> setNotifOpen(o=>!o)}>
+            🔔{unreadCount>0 && <span className="notif-badge">{unreadCount}</span>}
+          </button>
+          {notifOpen && (
+            <div className="nav-menu-panel notifications-panel" style={{right:'60px'}}>
+              <h4 style={{margin:'0 0 10px'}}>Notifications</h4>
+              {notifications.length===0 && <p style={{fontSize:'0.75rem',color:'var(--text-secondary)'}}>No notifications.</p>}
+              <ul style={{listStyle:'none',padding:0,margin:0,display:'flex',flexDirection:'column',gap:'8px',maxHeight:260,overflowY:'auto'}}>
+                {notifications.map(n=> (
+                  <li key={n.id} style={{background:'var(--bg-surface)',padding:'8px 10px',border:'1px solid var(--border-color)',borderRadius:8,fontSize:'0.7rem',display:'flex',flexDirection:'column',gap:4}}>
+                    <span>{n.message}</span>
+                    <div style={{display:'flex',justifyContent:'space-between',alignItems:'center'}}>
+                      <small style={{opacity:.6}}>{n.status}</small>
+                      {!n.is_read && <button onClick={()=>markRead(n.id)} style={{background:'var(--accent)',color:'#fff',border:'none',padding:'4px 8px',borderRadius:6,fontSize:'0.6rem',cursor:'pointer'}}>Mark read</button>}
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+          {menuOpen && (
+            <div ref={menuRef} className="nav-menu-panel" id="primary-menu" role="menu">
+              <ul className="nav-menu-list">
+                <li><button type="button" role="menuitem" onClick={()=>gotoAndClose('/vet')} className="menu-link">Vet Directory</button></li>
+                <li><button type="button" role="menuitem" onClick={()=>gotoAndClose('/donation')} className="menu-link">Donate</button></li>
+                <li>
+                  <button type="button" role="menuitem" className="menu-link toggle-theme-btn" onClick={()=> setDarkMode(m=>!m)}>
+                    <span>{darkMode ? 'Light Mode' : 'Dark Mode'}</span>
+                    <span className="inline-badge">{darkMode ? 'ON' : 'OFF'}</span>
+                  </button>
+                </li>
+                <li><button type="button" role="menuitem" onClick={()=>gotoAndClose('/cart')} className="menu-link">Cart {totalQty ? <span className="inline-badge">{totalQty} • ${totalVal.toFixed(2)}</span> : '(empty)'}</button></li>
+                {isLoggedIn && (
+                  <>
+                    <li><button type="button" role="menuitem" onClick={()=>gotoAndClose('/admin/add-pet')} className="menu-link">Add New Pet</button></li>
+                    { (effectiveUser?.username?.toLowerCase?.() === 'admin') && (
+                      <li><button type="button" role="menuitem" onClick={()=>gotoAndClose('/admin')} className="menu-link">Admin Panel</button></li>
+                    )}
+                  </>
+                )}
+                <li className="logout-wrapper" role="menuitem"><Logout /></li>
+              </ul>
+            </div>
+          )}
         </div>
       </div>
 
-      {/* Add New Pet */}
-      {isLoggedIn && (
-        <div className="add-pet-btn-container">
-          <Link to="/admin/add-pet">
-            <button className="add-pet-btn" type="button">Add New Pet</button>
-          </Link>
+      {/* Add New Pet moved into hamburger menu */}
+
+      <div className="content-layout">
+        <div className="filters-toggle-row">
+          <button
+            type="button"
+            className={`filter-toggle-btn ${showFilters ? 'open' : ''}`}
+            aria-expanded={showFilters}
+            aria-controls="filters-panel"
+            onClick={()=> setShowFilters(o=>!o)}
+          >
+            <span className="icon" aria-hidden>⚲</span>
+            <span className="label">Filters</span>
+            <span className="count-badge" aria-label={`${filteredPets.length} results`}>{filteredPets.length}</span>
+            <span className="chevron" aria-hidden>{showFilters ? '▲' : '▼'}</span>
+          </button>
         </div>
-      )}
-
-      {/* Filters */}
-  <div className="filters">
-        <select name="type" onChange={handleFilterChange} value={filter.type}>
-          <option value="">Select Animal Type</option>
-          <option value="Dog">Dog</option>
-          <option value="Cat">Cat</option>
-          <option value="Bird">Bird</option>
-          <option value="Rabbit">Rabbit</option>
-        </select>
-        <select name="breed" onChange={handleFilterChange} value={filter.breed}>
-          <option value="">Select Breed</option>
-          <option value="Golden Retriever">Golden Retriever</option>
-          <option value="Tabby">Tabby</option>
-          <option value="Canary">Canary</option>
-          <option value="Angora">Angora</option>
-        </select>
-        <select name="age" onChange={handleFilterChange} value={filter.age}>
-          <option value="">Select Age</option>
-          <option value="3 years">3 years</option>
-          <option value="2 years">2 years</option>
-          <option value="1 year">1 year</option>
-        </select>
-        <select name="sort" onChange={handleSortChange} value={sortBy}>
-          <option value="name">Sort by Name</option>
-          <option value="age">Sort by Age</option>
-        </select>
-      </div>
-
-      {/* Pets */}
-      <h1>Available Pets for Adoption</h1>
-      <div className="pet-cards-container">
+        {showFilters && (
+        <aside id="filters-panel" className="sidebar-filters" aria-label="Filters and sorting">
+          <h2 className="sidebar-title">Filter & Sort</h2>
+          <div className="filter-group">
+            <label htmlFor="search" className="filter-label">Search</label>
+            <input id="search" type="text" placeholder="Search by name" value={searchQuery} onChange={handleSearchChange} />
+          </div>
+          <div className="filter-group">
+            <label htmlFor="type" className="filter-label">Animal Type</label>
+            <select id="type" name="type" onChange={handleFilterChange} value={filter.type}>
+              <option value="">All</option>
+              <option value="Dog">Dog</option>
+              <option value="Cat">Cat</option>
+              <option value="Bird">Bird</option>
+              <option value="Rabbit">Rabbit</option>
+              <option value="Other">Other</option>
+            </select>
+          </div>
+          <div className="filter-group">
+            <label htmlFor="breed" className="filter-label">Breed</label>
+            <select id="breed" name="breed" onChange={handleFilterChange} value={filter.breed}>
+              <option value="">All</option>
+              <option value="Golden Retriever">Golden Retriever</option>
+              <option value="Tabby">Tabby</option>
+              <option value="Canary">Canary</option>
+              <option value="Angora">Angora</option>
+              <option value="Ham">Ham</option>
+            </select>
+          </div>
+          <div className="filter-group">
+            <label htmlFor="age" className="filter-label">Age</label>
+            <select id="age" name="age" onChange={handleFilterChange} value={filter.age}>
+              <option value="">All</option>
+              <option value="3 years">3 years</option>
+              <option value="2 years">2 years</option>
+              <option value="1 year">1 year</option>
+              <option value="1 years">1 years</option>
+            </select>
+          </div>
+          <div className="filter-group">
+            <label htmlFor="sort" className="filter-label">Sort</label>
+            <select id="sort" name="sort" onChange={handleSortChange} value={sortBy}>
+              <option value="name">Name (A–Z)</option>
+              <option value="age">Age</option>
+            </select>
+          </div>
+          <div className="filter-actions">
+            <button type="button" className="reset-btn" onClick={resetFilters}>Reset</button>
+          </div>
+          <div className="filter-stats" aria-live="polite">{filteredPets.length} result{filteredPets.length!==1 && 's'}</div>
+        </aside>
+        )}
+  <main className="main-content">
+          {/* Pets */}
+          <h1>Available Pets for Adoption</h1>
+          <div className="pet-cards-container">
         {filteredPets.map((pet) => (
           <div key={pet.id} className="pet-card">
             <Link to={`/pet/${pet.id}`} className="pet-card-link">
@@ -232,69 +379,9 @@ const PetList = () => {
         ))}
       </div>
 
-      {/* Cart */}
-      <section className="cart-section" id="cart-section">
-        <h2>Your Cart</h2>
-        {cart.length === 0 ? (
-          <div className="cart-empty">Your cart is empty!</div>
-        ) : (
-          <div className="cart-table-wrapper">
-            <table className="cart-table" aria-label="Shopping cart">
-              <thead>
-                <tr>
-                  <th>Item</th>
-                  <th className="qty-col">Qty</th>
-                  <th>Unit Price</th>
-                  <th>Subtotal</th>
-                  <th className="action-col">Action</th>
-                </tr>
-              </thead>
-              <tbody>
-                {cart.map(item => {
-                  const product = item.product_type === 'pet_food'
-                    ? foodItems.find(f => String(f.id) === String(item.product_id))
-                    : null;
-                  const name = product ? product.name : 'Item';
-                  const unit = Number(item.price) || 0;
-                  const qty = item.quantity || 1;
-                  const subtotal = unit * qty;
-                  return (
-                    <tr key={item.id}>
-                      <td data-label="Item">{name}</td>
-                      <td data-label="Qty" className="qty-col">{qty}</td>
-                      <td data-label="Unit Price">${unit.toFixed(2)}</td>
-                      <td data-label="Subtotal">${subtotal.toFixed(2)}</td>
-                      <td className="action-col">
-                        <button
-                          type="button"
-                          className="remove-btn"
-                          onClick={() => handleRemoveFromCart(item.id)}
-                        >Remove</button>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-              <tfoot>
-                <tr>
-                  <td colSpan="3" className="total-label">Total</td>
-                  <td colSpan="2" className="total-value">${cart.reduce((s,i)=> s + (i.price * (i.quantity||1)),0).toFixed(2)}</td>
-                </tr>
-              </tfoot>
-            </table>
-          </div>
-        )}
-      </section>
-        <div className="checkout-actions">
-          <button
-            type="button"
-            className="checkout-btn"
-            onClick={() => navigate('/payment')}
-            disabled={cart.length === 0}
-          >
-            Proceed to Checkout
-          </button>
-        </div>
+  {/* Cart removed – now separate page */}
+        </main>
+      </div>
     </div>
   );
 };
