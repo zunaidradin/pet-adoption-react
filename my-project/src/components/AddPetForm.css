@@ -1,47 +1,17 @@
-.add-pet-form {
-  max-width: 600px;
-  margin: 0 auto;
-  padding: 20px;
-  background-color: #fff;
-  border-radius: 12px;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-}
-
-.add-pet-form h2 {
-  text-align: center;
-  color: #333;
-}
-
-.add-pet-form label {
-  display: block;
-  font-size: 1.1rem;
-  color: #333;
-  margin-bottom: 8px;
-}
-
-.add-pet-form input,
-.add-pet-form textarea,
-.add-pet-form select {
-  width: 100%;
-  padding: 10px;
-  margin-bottom: 15px;
-  border: 1px solid #ddd;
-  border-radius: 8px;
-  font-size: 1rem;
-  color: #333;
-}
-
-.add-pet-form button {
-  width: 100%;
-  padding: 12px;
-  background-color: #2b2d42;
-  color: #fff;
-  font-size: 1.1rem;
-  border: none;
-  border-radius: 8px;
-  cursor: pointer;
-}
-
-.add-pet-form button:hover {
-  background-color: #1d1f29;
-}
+/* Themed Add Pet Form (clean) */
+.add-pet-form { max-width:640px; margin:40px auto; padding:26px 30px 34px; background:var(--bg-surface); border:1px solid var(--border-color); border-radius:18px; box-shadow:0 10px 32px -8px rgba(0,0,0,0.25); transition:background .35s,color .35s,border-color .35s; }
+body.dark-theme .add-pet-form { box-shadow:0 14px 40px -10px rgba(0,0,0,0.65); }
+.add-pet-form h2 { text-align:center; margin:0 0 24px; font-size:1.8rem; font-weight:700; letter-spacing:.5px; color:var(--text-primary); }
+.add-pet-form label { display:block; font-size:.8rem; letter-spacing:.8px; font-weight:600; text-transform:uppercase; color:var(--text-secondary); margin-bottom:8px; }
+.add-pet-form input,.add-pet-form textarea,.add-pet-form select { width:100%; padding:12px 14px; margin-bottom:18px; border:1px solid var(--border-color); border-radius:10px; font-size:.95rem; background:var(--input-bg,#ffffff); color:var(--text-primary); outline:none; transition:border-color .25s, background .25s; }
+.add-pet-form input:focus,.add-pet-form textarea:focus,.add-pet-form select:focus { border-color:var(--accent); background:var(--input-bg-focus,#f1f5f9); }
+.add-pet-form textarea { resize:vertical; min-height:110px; }
+.add-pet-form button { width:100%; padding:15px 20px; background:var(--accent); color:#fff; font-size:1rem; font-weight:600; border:none; border-radius:12px; cursor:pointer; box-shadow:0 6px 18px -4px rgba(0,0,0,0.3); transition:background .25s, transform .25s; }
+.add-pet-form button:hover { background:var(--accent-hover); }
+.add-pet-form button:active { transform:translateY(1px); }
+.preview-wrap { margin-top:6px; }
+.preview-image { max-width:140px; height:140px; object-fit:cover; border-radius:12px; border:2px solid var(--border-color); box-shadow:0 4px 14px -4px rgba(0,0,0,0.35); }
+.form-msg { margin:18px 0 0; font-size:.85rem; font-weight:600; letter-spacing:.4px; padding:12px 16px; border:1px solid var(--border-color); border-radius:12px; background:var(--bg-surface-alt); color:var(--text-primary); box-shadow:0 4px 16px -6px rgba(0,0,0,0.2); }
+body.dark-theme .form-msg { background:#223248; }
+.form-msg.success { border-color:var(--accent); }
+.form-msg.error { border-color:var(--danger); color:var(--danger); }
