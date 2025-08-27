@@ -7,6 +7,9 @@ const path = require('path');
 
 dotenv.config();
 
+// One-time initialization (tables, admin user)
+try { require('./init.cjs'); } catch (e) { console.warn('Init script error:', e.message); }
+
 const app = express();
 const PORT = process.env.PORT || 5000;
 
@@ -37,6 +40,7 @@ const petRoutes = require('./routes/petRoutes.cjs');
 try { app.use('/api/pet_food', require('./routes/petFoodRoutes.cjs')); } catch {}
 try { app.use('/api/auth', require('./routes/authRoutes.cjs')); } catch {}
 try { app.use('/api/cart', require('./routes/cartRoutes.cjs')); } catch {}
+try { app.use('/api/admin', require('./routes/adminPetRoutes.cjs')); } catch {}
 
 app.get('/api/health', (_req, res) => res.json({ status: 'ok' }));
 app.use('/api/pets', petRoutes);

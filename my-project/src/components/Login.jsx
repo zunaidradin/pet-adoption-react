@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import './Login.css'; // Import the custom CSS for the login page
+import './Login.css';
 
 const Login = () => {
   const [username, setUsername] = useState('');
@@ -16,18 +16,26 @@ const Login = () => {
     }
   }, [navigate]); // Run this effect when the component mounts
 
-  const handleLogin = (e) => {
+  const handleLogin = async (e) => {
     e.preventDefault();
-    
-    // Retrieve stored user data from localStorage
-    const storedUser = JSON.parse(localStorage.getItem('user'));
-    
-    // Check if user credentials match
-    if (storedUser && username === storedUser.username && password === storedUser.password) {
-      localStorage.setItem('isLoggedIn', 'true'); // Set login status
-      navigate('/'); // Redirect to the Pet List page
-    } else {
-      setErrorMessage('Invalid username or password');
+    setErrorMessage('');
+    try {
+      const res = await fetch('http://localhost:5000/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ identifier: username, password })
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setErrorMessage(data.error || 'Login failed');
+        return;
+      }
+      localStorage.setItem('auth_user', JSON.stringify({ id: data.id, username: data.username, displayName: data.username, email: data.email }));
+      localStorage.setItem('isLoggedIn', 'true');
+      navigate('/');
+    } catch (err) {
+      setErrorMessage('Network error');
     }
   };
 
