@@ -1,7 +1,9 @@
 import React, { useEffect, useState, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
 import './AdminPanel.css';
 
 const AdminPanel = () => {
+	const navigate = useNavigate();
 	const [pending, setPending] = useState([]);
 	const [loading, setLoading] = useState(false);
 	const [error, setError] = useState('');
@@ -34,6 +36,7 @@ const AdminPanel = () => {
 
 	return (
 		<div className="admin-panel">
+			<button type="button" onClick={()=>navigate(-1)} className="back-btn" style={{marginBottom:'14px'}}>← Back</button>
 			<h1 className="admin-title">Admin Panel</h1>
 			<p className="admin-intro">Review and approve pending pet submissions.</p>
 			<div className="admin-sections single-col">

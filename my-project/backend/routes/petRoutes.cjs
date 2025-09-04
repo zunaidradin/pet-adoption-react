@@ -54,7 +54,7 @@ const upload = multer({
 
 // POST /api/pets  (multipart/form-data with "image")
 router.post('/', upload.single('image'), (req, res) => {
-  const { name, animalType, breed, age, status, description } = req.body || {};
+  const { name, animalType, breed, age, status, description, address, contactNumber } = req.body || {};
   if (!name || !animalType || !breed || !age || !status) {
     return res.status(400).json({ error: 'Missing required fields' });
   }
@@ -75,8 +75,18 @@ router.post('/', upload.single('image'), (req, res) => {
   }
   const finalize = () => {
   const table = isAdminDirect ? 'pets' : 'pending_pets';
-  const sql = `INSERT INTO ${table} (name, animalType, breed, age, status, description, image${userId ? ', submitted_by' : ''}) VALUES (?,?,?,?,?,?,?${userId ? ',?' : ''})`;
-    const paramsBase = [String(name).trim(), animalType, String(breed).trim(), String(age).trim(), status, (description ?? '').trim(), imagePath];
+  const sql = `INSERT INTO ${table} (name, animalType, breed, age, status, description, address, contactNumber, image${userId ? ', submitted_by' : ''}) VALUES (?,?,?,?,?,?,?,?,?${userId ? ',?' : ''})`;
+    const paramsBase = [
+      String(name).trim(),
+      animalType,
+      String(breed).trim(),
+      String(age).trim(),
+      status,
+      (description ?? '').trim(),
+      address ? String(address).trim() : null,
+      contactNumber ? String(contactNumber).trim() : null,
+      imagePath
+    ];
     const params = userId ? [...paramsBase, userId] : paramsBase;
     db.query(sql, params, (err, result) => {
       if (err) {
@@ -119,6 +129,20 @@ router.get('/', (_req, res) => {
       return res.status(500).json({ error: 'Failed to load pets' });
     }
     res.json(rows);
+  });
+});
+
+// GET /api/pets/:id  (single pet detail)
+router.get('/:id', (req, res) => {
+  const { id } = req.params;
+  if (!/^[0-9]+$/.test(id)) return res.status(400).json({ error: 'Invalid id' });
+  db.query('SELECT * FROM pets WHERE id=? LIMIT 1', [id], (err, rows) => {
+    if (err) {
+      console.error('Select error:', err);
+      return res.status(500).json({ error: 'Failed to load pet' });
+    }
+    if (!rows.length) return res.status(404).json({ error: 'Not found' });
+    res.json(rows[0]);
   });
 });
 

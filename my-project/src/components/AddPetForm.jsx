@@ -1,14 +1,18 @@
 // src/components/AddPetForm.jsx
 import React, { useState, useEffect, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 import './AddPetForm.css';
 
 const AddPetForm = () => {
+  const navigate = useNavigate();
   const [name, setName] = useState('');
   const [breed, setBreed] = useState('');
   const [animalType, setAnimalType] = useState('Dog');
   const [age, setAge] = useState(''); // numeric input; saved as "<n> years"
   const [status, setStatus] = useState('Available');
   const [description, setDescription] = useState('');
+  const [address, setAddress] = useState('');
+  const [contactNumber, setContactNumber] = useState('');
   const [imageFile, setImageFile] = useState(null);
 
   const [submitting, setSubmitting] = useState(false);
@@ -61,7 +65,9 @@ const AddPetForm = () => {
       fd.append('breed', breed.trim());
       fd.append('age', ageToSave);
       fd.append('status', status);
-      fd.append('description', description.trim());
+  fd.append('description', description.trim());
+  fd.append('address', address.trim());
+  fd.append('contactNumber', contactNumber.trim());
       fd.append('image', imageFile); // field name must be "image"
 
   // Use explicit backend origin (dev) to avoid issues if proxy missing
@@ -89,7 +95,9 @@ const AddPetForm = () => {
       setAnimalType('Dog');
       setAge('');
       setStatus('Available');
-      setDescription('');
+  setDescription('');
+  setAddress('');
+  setContactNumber('');
       setImageFile(null);
 
       // Clear and revoke preview
@@ -109,6 +117,7 @@ const AddPetForm = () => {
 
   return (
     <form onSubmit={handleSubmit} className="add-pet-form" encType="multipart/form-data">
+      <button type="button" onClick={()=>navigate(-1)} className="back-btn" style={{marginBottom:'12px'}}>← Back</button>
       <h2>Add New Pet</h2>
 
       <div>
@@ -170,6 +179,27 @@ const AddPetForm = () => {
           value={description}
           placeholder="Friendly and playful..."
           onChange={(e) => setDescription(e.target.value)}
+        />
+      </div>
+
+      <div>
+        <label>Address</label>
+        <input
+          type="text"
+          value={address}
+          placeholder="123 Street, City"
+          onChange={(e) => setAddress(e.target.value)}
+        />
+      </div>
+
+      <div>
+        <label>Contact Number</label>
+        <input
+          type="text"
+          value={contactNumber}
+          placeholder="e.g. +8801XXXXXXX"
+          onChange={(e) => setContactNumber(e.target.value)}
+          maxLength={40}
         />
       </div>
 

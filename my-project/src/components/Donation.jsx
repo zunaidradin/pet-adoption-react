@@ -48,6 +48,7 @@ const Donation = () => {
 
   return (
     <div className="donation-page">
+  <button type="button" onClick={()=>navigate(-1)} className="back-btn" style={{marginBottom:'14px'}}>← Back</button>
   <h1 className="donation-title">Donate to Support Animals</h1>
   <p className="intro">Your contribution helps provide food, shelter, and medical care for dogs, cats, and other rescue animals.</p>
       <form className="donation-form" onSubmit={handleSubmit}>
@@ -122,7 +123,6 @@ const Donation = () => {
           <strong>৳{Number(amount||0).toFixed(2)}</strong>
         </div>
   <button type="submit" className="donate-btn" disabled={submitting}>{submitting ? 'Processing...' : 'Donate Now'}</button>
-        <button type="button" className="cancel-btn" onClick={()=> navigate(-1)}>Back</button>
       </form>
     </div>
   );

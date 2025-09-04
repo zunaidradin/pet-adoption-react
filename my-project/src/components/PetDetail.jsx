@@ -9,20 +9,19 @@ const PetDetail = () => {
 
   useEffect(() => {
     let cancelled = false;
-    const load = async () => {
+    (async () => {
       try {
-        const res = await fetch('http://localhost:5000/api/pets');
-        const data = await res.json();
-        if (!Array.isArray(data)) return;
-        const selected = data.find(p => String(p.id) === String(id));
-        if (!cancelled) {
-          if (selected) setPet(selected); else navigate('/');
+        const res = await fetch(`http://localhost:5000/api/pets/${id}`);
+        if (!res.ok) {
+          navigate('/');
+          return;
         }
+        const data = await res.json();
+        if (!cancelled) setPet(data);
       } catch (e) {
         console.error('Failed to load pet detail', e);
       }
-    };
-    load();
+    })();
     return () => { cancelled = true; };
   }, [id, navigate]);
 
@@ -41,12 +40,8 @@ const PetDetail = () => {
               <td>{pet.age}</td>
             </tr>
             <tr>
-              <td><strong>Breed:</strong></td>
-              <td>{pet.breed}</td>
-            </tr>
-            <tr>
               <td><strong>Type:</strong></td>
-              <td>{pet.type}</td>
+              <td>{pet.animalType || pet.type || '—'}</td>
             </tr>
             <tr>
               <td><strong>Status:</strong></td>
@@ -55,6 +50,14 @@ const PetDetail = () => {
             <tr>
               <td><strong>Description:</strong></td>
               <td>{pet.description}</td>
+            </tr>
+            <tr>
+              <td><strong>Address:</strong></td>
+              <td>{pet.address || '—'}</td>
+            </tr>
+            <tr>
+              <td><strong>Contact:</strong></td>
+              <td>{pet.contactNumber || '—'}</td>
             </tr>
           </tbody>
         </table>

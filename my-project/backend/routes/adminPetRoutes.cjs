@@ -20,8 +20,8 @@ router.post('/pending-pets/:id/approve', isAdmin, (req, res) => {
 		if (err) return res.status(500).json({ error: 'DB error' });
 		if (!rows.length) return res.status(404).json({ error: 'Not found' });
 		const p = rows[0];
-		const insertSql = 'INSERT INTO pets (name, animalType, breed, age, status, description, image) VALUES (?,?,?,?,?,?,?)';
-		db.query(insertSql, [p.name, p.animalType, p.breed, p.age, p.status, p.description, p.image], (err2, result) => {
+		const insertSql = 'INSERT INTO pets (name, animalType, breed, age, status, description, address, contactNumber, image) VALUES (?,?,?,?,?,?,?,?,?)';
+		db.query(insertSql, [p.name, p.animalType, p.breed, p.age, p.status, p.description, p.address, p.contactNumber, p.image], (err2, result) => {
 			if (err2) return res.status(500).json({ error: 'Insert failed' });
 				db.query('DELETE FROM pending_pets WHERE id=?', [id], () => {});
 				if (p.submitted_by) {
