@@ -14,6 +14,7 @@ import Payment from './components/Payment';
 import Donation from './components/Donation';
 import VetList from './components/VetList';
 import CartPage from './components/CartPage';
+import AdminAddFood from './components/AdminAddFood';
 
 // OPTIONAL: If you have a CartPanel component, import it and render it in a layout.
 // import CartPanel from './components/CartPanel';
@@ -66,6 +67,7 @@ const App = () => {
   <Route path="/payment" element={<Payment />} />
   <Route path="/donation" element={<Donation />} />
   <Route path="/admin" element={<AdminPanel />} />
+  <Route path="/admin/add-food" element={<AdminAddFood />} />
   <Route path="/cart" element={<CartPage />} />
   <Route path="/vet" element={<VetList />} />
       </Routes>

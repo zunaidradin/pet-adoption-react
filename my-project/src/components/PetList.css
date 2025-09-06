@@ -234,3 +234,45 @@ body:not(.dark-theme) .header-actions .notifications-panel * {
   fill:#000 !important;
 }
 body:not(.dark-theme) .header-actions .hamburger-btn .bar { background:#000 !important; }
+
+/* ===== Fly-to-cart Animation Elements ===== */
+.flying-clone { 
+  background-size:cover; 
+  background-position:center; 
+  border-radius:50%; 
+  pointer-events:none; 
+  box-shadow:0 8px 20px -6px rgba(0,0,0,0.35);
+  transition:transform .7s cubic-bezier(.55,.06,.19,.97), opacity .7s ease;
+  will-change:transform, opacity;
+  animation:flyPop .7s both;
+}
+@keyframes flyPop { 
+  0% { transform:scale(.6); }
+  20% { transform:scale(1); }
+  100% { transform:scale(.2); }
+}
+
+/* Pulse feedback on cart button */
+.hamburger-btn.cart-pulse { position:relative; }
+.hamburger-btn.cart-pulse::after { 
+  content:""; 
+  position:absolute; 
+  inset:0; 
+  border-radius:inherit; 
+  box-shadow:0 0 0 0 rgba(59,130,246,0.6); 
+  animation:cartPulse 0.6s ease forwards; 
+  pointer-events:none;
+}
+@keyframes cartPulse { 
+  0% { box-shadow:0 0 0 0 rgba(59,130,246,0.6); }
+  70% { box-shadow:0 0 0 12px rgba(59,130,246,0); }
+  100% { box-shadow:0 0 0 0 rgba(59,130,246,0); }
+}
+
+/* Error shake */
+.hamburger-btn.cart-error-shake { animation:cartShake .5s ease; }
+@keyframes cartShake {
+  0%,100% { transform:translateX(0); }
+  15%,45%,75% { transform:translateX(-5px); }
+  30%,60%,90% { transform:translateX(5px); }
+}

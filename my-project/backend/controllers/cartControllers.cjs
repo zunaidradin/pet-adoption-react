@@ -36,30 +36,43 @@ exports.addItem = (req, res) => {
     return res.status(400).json({ error: 'Unsupported productType' });
   }
 
-  // Look up price from DB to avoid trusting client
-  const getPriceSql = `SELECT price FROM pet_food WHERE id = ?`;
+  // Look up price & stock from DB to avoid trusting client
+  const getPriceSql = `SELECT price, stock FROM pet_food WHERE id = ?`;
   db.query(getPriceSql, [productId], (err, rows) => {
     if (err) return res.status(500).json({ error: err.message });
     if (rows.length === 0) return res.status(404).json({ error: 'Product not found' });
 
     const price = rows[0].price;
+    const stock = rows[0].stock ?? 0;
+    if (stock <= 0) return res.status(400).json({ error: 'Out of stock' });
 
-    const insertSql = `
-      INSERT INTO cart_items (user_id, product_id, product_type, quantity, price)
-      VALUES (?, ?, ?, 1, ?)
-      ON DUPLICATE KEY UPDATE quantity = quantity + 1
-    `;
-    db.query(insertSql, [userId, productId, productType, price], (err2) => {
-      if (err2) return res.status(500).json({ error: err2.message });
+    // Decrement stock and add to cart atomically-ish
+    const decSql = `UPDATE pet_food SET stock = stock - 1 WHERE id = ? AND stock > 0`;
+    db.query(decSql, [productId], (errDec, resultDec) => {
+      if (errDec) return res.status(500).json({ error: errDec.message });
+      if (resultDec.affectedRows === 0) return res.status(400).json({ error: 'Out of stock' });
 
-      // Return updated cart
-      const cartSql = `
-        SELECT id, user_id, product_id, product_type, quantity, price, created_at
-        FROM cart_items WHERE user_id = ? ORDER BY id DESC
+      const insertSql = `
+        INSERT INTO cart_items (user_id, product_id, product_type, quantity, price)
+        VALUES (?, ?, ?, 1, ?)
+        ON DUPLICATE KEY UPDATE quantity = quantity + 1
       `;
-      db.query(cartSql, [userId], (err3, rows2) => {
-        if (err3) return res.status(500).json({ error: err3.message });
-        res.json(rows2);
+      db.query(insertSql, [userId, productId, productType, price], (err2) => {
+        if (err2) {
+          // rollback stock decrement if cart insert failed
+          db.query('UPDATE pet_food SET stock = stock + 1 WHERE id = ?', [productId], ()=>{});
+          return res.status(500).json({ error: err2.message });
+        }
+
+        // Return updated cart
+        const cartSql = `
+          SELECT id, user_id, product_id, product_type, quantity, price, created_at
+          FROM cart_items WHERE user_id = ? ORDER BY id DESC
+        `;
+        db.query(cartSql, [userId], (err3, rows2) => {
+          if (err3) return res.status(500).json({ error: err3.message });
+          res.json(rows2);
+        });
       });
     });
   });
@@ -76,18 +89,28 @@ exports.removeItem = (req, res) => {
     return res.status(400).json({ error: 'id and userId required' });
   }
 
-  const delSql = `DELETE FROM cart_items WHERE id = ? AND user_id = ?`;
-  db.query(delSql, [id, userId], (err, result) => {
+  // First get product_id to restore stock
+  db.query('SELECT product_id FROM cart_items WHERE id = ? AND user_id = ?', [id, userId], (e0, rows0) => {
+    if (e0) return res.status(500).json({ error: e0.message });
+    if (!rows0.length) return res.status(404).json({ error: 'Not found' });
+    const productId = rows0[0].product_id;
+
+    const delSql = `DELETE FROM cart_items WHERE id = ? AND user_id = ?`;
+    db.query(delSql, [id, userId], (err, result) => {
     if (err) return res.status(500).json({ error: err.message });
     if (result.affectedRows === 0) return res.status(404).json({ error: 'Not found' });
-    // Return updated cart
-    const cartSql = `
-      SELECT id, user_id, product_id, product_type, quantity, price, created_at
-      FROM cart_items WHERE user_id = ? ORDER BY id DESC
-    `;
-    db.query(cartSql, [userId], (err2, rows2) => {
-      if (err2) return res.status(500).json({ error: err2.message });
-      res.json(rows2);
+      // Restore stock by 1
+      db.query('UPDATE pet_food SET stock = stock + 1 WHERE id = ?', [productId], ()=>{
+        // Return updated cart
+        const cartSql = `
+          SELECT id, user_id, product_id, product_type, quantity, price, created_at
+          FROM cart_items WHERE user_id = ? ORDER BY id DESC
+        `;
+        db.query(cartSql, [userId], (err2, rows2) => {
+          if (err2) return res.status(500).json({ error: err2.message });
+          res.json(rows2);
+        });
+      });
     });
   });
 };

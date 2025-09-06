@@ -68,6 +68,64 @@ async function ensureAdminUser() {
 function runInit() {
   ensurePendingPetsTable();
   ensureNotificationsTable();
+  // Donations table for tracking donor contributions
+  try {
+    const sql = `CREATE TABLE IF NOT EXISTS donations (
+      id INT AUTO_INCREMENT PRIMARY KEY,
+      user_id INT NULL,
+      donor_name VARCHAR(100) NULL,
+      donor_email VARCHAR(150) NULL,
+      amount DECIMAL(10,2) NOT NULL,
+      animalType VARCHAR(50) NULL,
+      method ENUM('cod','card','bkash','nagad') NOT NULL,
+      wallet_number VARCHAR(30) NULL,
+      trx_id VARCHAR(60) NULL,
+      card_last4 VARCHAR(4) NULL,
+      note TEXT NULL,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      INDEX(user_id), INDEX(created_at)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;`;
+    db.query(sql, (err)=>{
+      if (err) console.error('❌ donations table ensure failed:', err.message);
+      else console.log('✅ donations table ready');
+    });
+  } catch(e) { console.error('Init donations error:', e.message); }
+  // Ensure pet_food table with expiry_date
+  try {
+    const createFood = `CREATE TABLE IF NOT EXISTS pet_food (
+      id INT AUTO_INCREMENT PRIMARY KEY,
+      name VARCHAR(120) NOT NULL,
+      price DECIMAL(10,2) NOT NULL DEFAULT 0,
+      image VARCHAR(255) NOT NULL,
+      stock INT NOT NULL DEFAULT 0,
+      expiry_date DATE NULL,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;`;
+    db.query(createFood, (err)=>{
+      if (err) console.error('❌ pet_food table ensure failed:', err.message);
+      else {
+        console.log('✅ pet_food table ready');
+        // Add expiry_date column if missing for existing installs
+        db.query("SHOW COLUMNS FROM pet_food LIKE 'expiry_date'", (e, rows) => {
+          if (!e && rows.length === 0) {
+            db.query('ALTER TABLE pet_food ADD COLUMN expiry_date DATE NULL AFTER image', (e2)=>{
+              if (e2) console.warn('⚠️ Could not add expiry_date to pet_food:', e2.message);
+              else console.log('✅ pet_food.expiry_date added');
+            });
+          }
+        });
+        // Add stock column if missing for existing installs
+        db.query("SHOW COLUMNS FROM pet_food LIKE 'stock'", (e3, rows2) => {
+          if (!e3 && rows2.length === 0) {
+            db.query('ALTER TABLE pet_food ADD COLUMN stock INT NOT NULL DEFAULT 0 AFTER image', (e4)=>{
+              if (e4) console.warn('⚠️ Could not add stock to pet_food:', e4.message);
+              else console.log('✅ pet_food.stock added');
+            });
+          }
+        });
+      }
+    });
+  } catch(e) { console.error('Init pet_food error:', e.message); }
   ensureAdminUser();
 }
 

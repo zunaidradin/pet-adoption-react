@@ -1,5 +1,6 @@
 // src/components/PetList.jsx
 import React, { useState, useEffect, useRef, useCallback } from 'react';
+import Swal from 'sweetalert2';
 import { Link, useNavigate } from 'react-router-dom';
 import './PetList.css';
 import Logout from './LogOut';
@@ -26,6 +27,11 @@ const PetList = () => {
   const isLoggedIn = !!effectiveUser;
   const userId = effectiveUser?.id; // must be numeric for cart endpoints
   const username = effectiveUser?.displayName || effectiveUser?.username || effectiveUser?.email || 'User';
+  const isAdmin = isLoggedIn && (
+    effectiveUser?.username?.toLowerCase?.() === 'admin' ||
+    effectiveUser?.is_admin === 1 ||
+    effectiveUser?.isAdmin === true
+  );
 
   // ---------- Fetch Pets ----------
   useEffect(() => {
@@ -101,13 +107,60 @@ const PetList = () => {
   const handleSortChange = (e) => setSortBy(e.target.value);
 
   // ---------- Add to Cart ----------
-  const handleAddToCart = async (foodItem, { scrollToCart = true } = {}) => {
+  const handleAddToCart = async (foodItem, { scrollToCart = true, event } = {}) => {
     if (!userId) { navigate('/login'); return; }
+
+    // ---- Visual feedback animation (fly to cart) ----
+    try {
+      if (event?.currentTarget && toggleRef.current) {
+        const sourceEl = event.currentTarget;
+        const imgEl = sourceEl.querySelector('img');
+        const cartBtn = toggleRef.current;
+        const startRect = (imgEl || sourceEl).getBoundingClientRect();
+        const cartRect = cartBtn.getBoundingClientRect();
+
+        // Create clone element
+        const clone = document.createElement('div');
+        clone.className = 'flying-clone';
+        const imgSrc = imgEl?.getAttribute('src');
+        if (imgSrc) {
+          clone.style.backgroundImage = `url(${imgSrc})`;
+        }
+        clone.style.position = 'fixed';
+        clone.style.left = `${startRect.left + startRect.width / 2}px`;
+        clone.style.top = `${startRect.top + startRect.height / 2}px`;
+        clone.style.width = `${Math.max(40, startRect.width * 0.4)}px`;
+        clone.style.height = `${Math.max(40, startRect.height * 0.4)}px`;
+        clone.style.zIndex = '9999';
+        document.body.appendChild(clone);
+
+        const endX = cartRect.left + cartRect.width / 2;
+        const endY = cartRect.top + cartRect.height / 2;
+        const deltaX = endX - (startRect.left + startRect.width / 2);
+        const deltaY = endY - (startRect.top + startRect.height / 2);
+
+        // Force style read then animate
+        requestAnimationFrame(() => {
+          clone.style.transform = `translate(${deltaX}px, ${deltaY}px) scale(0.2)`;
+          clone.style.opacity = '0';
+        });
+
+        const removeClone = () => { clone.remove(); };
+        clone.addEventListener('transitionend', removeClone, { once: true });
+
+        // Pulse cart after slight delay
+        setTimeout(() => {
+          cartBtn.classList.add('cart-pulse');
+          setTimeout(() => cartBtn.classList.remove('cart-pulse'), 600);
+        }, 250);
+      }
+    } catch {/* ignore animation errors */}
+
+    // ---- Network request (actual add) ----
     try {
       const response = await fetch('http://localhost:5000/api/cart', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        // Server expects camelCase keys & derives price / increments quantity
         body: JSON.stringify({
           userId: userId,
           productId: foodItem.id,
@@ -115,14 +168,31 @@ const PetList = () => {
         })
       });
 
-      if (!response.ok) throw new Error('POST /api/cart failed');
-      await fetchCartItems(); // refresh with DB values
-       if (scrollToCart) {
-         const el = document.getElementById('cart-section');
-         if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
-       }
+  if (!response.ok) {
+        // Try to parse server error
+        let msg = 'POST /api/cart failed';
+        try { const txt = await response.text(); msg = (JSON.parse(txt)?.error) || msg; } catch {}
+        throw new Error(msg);
+      }
+      await fetchCartItems();
+      // Optimistically decrement local stock for this item
+      setFoodItems(items => items.map(it => it.id === foodItem.id ? { ...it, stock: Math.max(0, (it.stock ?? 0) - 1) } : it));
+      if (scrollToCart) {
+        const el = document.getElementById('cart-section');
+        if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
     } catch (error) {
       console.error('Error adding to cart:', error);
+      if (/out of stock/i.test(String(error?.message || ''))) {
+        try { await Swal.fire({ icon:'info', title:'Out of stock', text:'Sorry, this item is out of stock.' }); } catch {}
+        // Refresh food list to reflect latest stock
+        try { const d = await fetch('http://localhost:5000/api/pet_food').then(r=>r.json()); setFoodItems(Array.isArray(d)? d: []); } catch {}
+      }
+      // Simple error feedback: brief shake
+      if (toggleRef.current) {
+        toggleRef.current.classList.add('cart-error-shake');
+        setTimeout(() => toggleRef.current?.classList.remove('cart-error-shake'), 500);
+      }
     }
   };
 
@@ -252,13 +322,17 @@ const PetList = () => {
             <div ref={menuRef} className="nav-menu-panel" id="primary-menu" role="menu">
               <ul className="nav-menu-list">
                 {/* 1. Cart */}
-                <li><button type="button" role="menuitem" onClick={()=>gotoAndClose('/cart')} className="menu-link">Cart {totalQty ? <span className="inline-badge">{totalQty} • ${totalVal.toFixed(2)}</span> : '(empty)'}</button></li>
+                {!isAdmin && (
+                  <li><button type="button" role="menuitem" onClick={()=>gotoAndClose('/cart')} className="menu-link">Cart {totalQty ? <span className="inline-badge">{totalQty} • ${totalVal.toFixed(2)}</span> : '(empty)'}</button></li>
+                )}
                 {/* 2. Add New Pet (only when logged in) */}
                 {isLoggedIn && (
                   <li><button type="button" role="menuitem" onClick={()=>gotoAndClose('/admin/add-pet')} className="menu-link">Add New Pet</button></li>
                 )}
                 {/* 3. Donate */}
-                <li><button type="button" role="menuitem" onClick={()=>gotoAndClose('/donation')} className="menu-link">Donate</button></li>
+                {!isAdmin && (
+                  <li><button type="button" role="menuitem" onClick={()=>gotoAndClose('/donation')} className="menu-link">Donate</button></li>
+                )}
                 {/* 4. Vet Directory */}
                 <li><button type="button" role="menuitem" onClick={()=>gotoAndClose('/vet')} className="menu-link">Vet Directory</button></li>
                 {/* 5. Light/Dark Mode toggle as last in requested list */}
@@ -268,9 +342,12 @@ const PetList = () => {
                     <span className="inline-badge">{darkMode ? 'ON' : 'OFF'}</span>
                   </button>
                 </li>
-                {/* Admin Panel (kept after core items if user is admin) */}
-                {isLoggedIn && (effectiveUser?.username?.toLowerCase?.() === 'admin') && (
-                  <li><button type="button" role="menuitem" onClick={()=>gotoAndClose('/admin')} className="menu-link">Admin Panel</button></li>
+                {/* Admin Panel + Add Food (if user is admin) */}
+                {isLoggedIn && isAdmin && (
+                  <>
+                    <li><button type="button" role="menuitem" onClick={()=>gotoAndClose('/admin')} className="menu-link">Admin Panel</button></li>
+                    <li><button type="button" role="menuitem" onClick={()=>gotoAndClose('/admin/add-food')} className="menu-link">Add New Food</button></li>
+                  </>
                 )}
                 {/* Logout */}
                 <li className="logout-wrapper" role="menuitem"><Logout /></li>
@@ -365,7 +442,12 @@ const PetList = () => {
       </div>
 
       {/* Food */}
-      <h2>Pet Food</h2>
+      <div style={{display:'flex', alignItems:'center', justifyContent:'space-between'}}>
+        <h2 style={{margin:0}}>Pet Food</h2>
+        {isLoggedIn && (effectiveUser?.username?.toLowerCase?.() === 'admin') && (
+          <button type="button" className="add-to-cart-btn" onClick={()=> navigate('/admin/add-food')}>Add New Food</button>
+        )}
+      </div>
       <div className="pet-food-container">
         {foodItems.map((food) => (
           <div
@@ -373,13 +455,38 @@ const PetList = () => {
             className="pet-food-item clickable-food"
             role="button"
             tabIndex={0}
-            onClick={() => handleAddToCart(food)}
-            onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handleAddToCart(food); } }}
+            aria-disabled={(food.stock ?? 0) <= 0}
+            style={(food.stock ?? 0) <= 0 ? { opacity: 0.6, cursor: 'not-allowed' } : undefined}
+            onClick={(e) => { if ((food.stock ?? 1) > 0) handleAddToCart(food, { event: e }); }}
+            onKeyDown={(e) => { if ((food.stock ?? 1) > 0 && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); handleAddToCart(food); } }}
           >
             <img src={food.image} alt={food.name} className="food-image" />
             <h3>{food.name}</h3>
             <p>${Number(food.price).toFixed(2)}</p>
-            <small style={{ color: '#666' }}>Click to add</small>
+            {(food.stock ?? 0) <= 0 ? (
+              <small style={{ color: 'crimson', fontWeight:600 }}>Out of stock</small>
+            ) : (
+              <small style={{ color: '#666' }}>In stock: {food.stock}</small>
+            )}
+            {isLoggedIn && (effectiveUser?.username?.toLowerCase?.() === 'admin') && (
+              <div style={{marginTop:8}}>
+                <button
+                  type="button"
+                  onClick={async (e)=>{
+                    e.stopPropagation();
+                    const res = await Swal.fire({ icon:'warning', title:'Remove item?', text:`${food.name}`, showCancelButton:true, confirmButtonText:'Delete' });
+                    if (!res.isConfirmed) return;
+                    try {
+                      const del = await fetch(`http://localhost:5000/api/pet_food/${food.id}`, { method:'DELETE', credentials:'include' });
+                      if (!del.ok) { const t = await del.text(); throw new Error((JSON.parse(t)?.error)||'Delete failed'); }
+                      setFoodItems(items => items.filter(i=> i.id !== food.id));
+                      await Swal.fire({ icon:'success', title:'Deleted' });
+                    } catch(err){ await Swal.fire({ icon:'error', title:'Failed', text:String(err.message||err) }); }
+                  }}
+                  style={{background:'#e53935', color:'#fff', border:'none', padding:'6px 10px', borderRadius:6, cursor:'pointer'}}
+                >Remove</button>
+              </div>
+            )}
           </div>
         ))}
       </div>

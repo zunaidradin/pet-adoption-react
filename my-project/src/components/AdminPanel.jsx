@@ -20,7 +20,30 @@ const AdminPanel = () => {
 		finally { setLoading(false); }
 	}, []);
 
-	useEffect(()=>{ loadPending(); }, [loadPending]);
+		useEffect(()=>{ loadPending(); }, [loadPending]);
+
+		// Donations summary
+		const [donationStats, setDonationStats] = useState({ total: 0, count: 0 });
+		const [recentDonations, setRecentDonations] = useState([]);
+		const loadDonations = useCallback(async ()=>{
+			try {
+				const [sRes, lRes] = await Promise.all([
+					fetch('http://localhost:5000/api/donations/stats', { credentials: 'include' }),
+					fetch('http://localhost:5000/api/donations', { credentials: 'include' })
+				]);
+				const stats = await sRes.json();
+				const list = await lRes.json();
+				if (sRes.ok) setDonationStats({ total: Number(stats.total||0), count: Number(stats.count||0) });
+				if (lRes.ok && Array.isArray(list)) setRecentDonations(list);
+			} catch {}
+		}, []);
+		useEffect(()=>{ loadDonations(); }, [loadDonations]);
+
+		// Fallback: compute totals from the list (in case stats not available)
+		const totalFromList = recentDonations.reduce((sum, d) => sum + Number(d.amount || 0), 0);
+		const countFromList = recentDonations.length;
+		const totalDisplay = Number.isFinite(donationStats.total) && donationStats.total > 0 ? donationStats.total : totalFromList;
+		const countDisplay = Number.isFinite(donationStats.count) && donationStats.count > 0 ? donationStats.count : countFromList;
 
 	const doAction = async (id, action) => {
 		setActionMsg('');
@@ -78,6 +101,39 @@ const AdminPanel = () => {
 						</table>
 					)}
 				</div>
+
+							<div className="admin-card">
+								<h3>Donations Received</h3>
+												<p style={{marginTop:0}}>
+													<strong>Total:</strong> ৳{Number(totalDisplay).toFixed(2)} &nbsp;•&nbsp; <strong>Count:</strong> {countDisplay}
+												</p>
+								{recentDonations.length === 0 ? (
+									<p>No donations yet.</p>
+								) : (
+									<table className="pending-table">
+										<thead>
+																<tr>
+																	<th>ID</th>
+																	<th>Amount</th>
+																	<th>Method</th>
+																	<th>Donor</th>
+																	<th>When</th>
+																</tr>
+										</thead>
+										<tbody>
+																{recentDonations.slice(0,10).map(d => (
+												<tr key={d.id}>
+													<td>{d.id}</td>
+													<td>৳{Number(d.amount).toFixed(2)}</td>
+													<td>{d.method}</td>
+													<td>{d.donor_name || d.donor_email || d.user_id || '-'}</td>
+													<td>{new Date(d.created_at).toLocaleString()}</td>
+												</tr>
+											))}
+										</tbody>
+									</table>
+								)}
+							</div>
 			</div>
 		</div>
 	);

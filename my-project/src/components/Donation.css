@@ -38,3 +38,19 @@
   .card-fields.alt .row { flex-direction:column; }
   .method-fieldset { flex-direction:column; }
 }
+
+/* Success Overlay */
+.donation-success-overlay { position:fixed; inset:0; background:rgba(0,0,0,.5); display:flex; align-items:center; justify-content:center; z-index:1000; animation:fadeIn .25s ease; }
+.success-card { background:#fff; color:#0f172a; padding:28px 30px; border-radius:16px; text-align:center; box-shadow:0 20px 60px -12px rgba(0,0,0,.5); position:relative; overflow:hidden; min-width:300px; }
+.success-icon { width:70px; height:70px; border-radius:50%; background:#16a34a; color:#fff; display:flex; align-items:center; justify-content:center; font-size:2rem; margin:0 auto 10px; box-shadow:0 0 0 8px rgba(22,163,74,.15); animation:pop .4s ease; }
+.success-title { margin:8px 0 4px; font-size:1.25rem; font-weight:800; }
+.success-sub { margin:0; color:#475569; font-weight:600; font-size:.9rem; }
+.confetti-wrap { position:absolute; inset:0; pointer-events:none; overflow:hidden; }
+.confetti { position:absolute; top:-10px; width:8px; height:14px; border-radius:2px; animation:fall 1.2s ease-in forwards; }
+
+@keyframes fadeIn { from { opacity:0 } to { opacity:1 } }
+@keyframes pop { 0%{ transform:scale(.6) } 60%{ transform:scale(1.05) } 100%{ transform:scale(1) } }
+@keyframes fall {
+  0% { transform:translateY(-20px) rotate(0deg); opacity:1 }
+  100% { transform:translateY(260px) rotate(340deg); opacity:0 }
+}
